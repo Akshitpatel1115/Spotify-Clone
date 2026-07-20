@@ -6,6 +6,7 @@ import Input from "../common/Input";
 import Button from "../common/Button";
 import RoleSelector from "./RoleSelector";
 import api from "../../api/axios";
+import { useToast } from "../../context/ToastContext";
 
 const RegisterForm = () => {
   const [formData, setFormData] = useState({
@@ -16,6 +17,7 @@ const RegisterForm = () => {
   });
 
   const navigate = useNavigate();
+  const toast = useToast();
 
   const handleChange = (e) => {
     setFormData((prev) => ({
@@ -36,10 +38,11 @@ const RegisterForm = () => {
 
     try {
       await api.post("/auth/register", formData);
+      toast.success("Account created successfully!");
       navigate("/login");
     } catch (error) {
       console.error(error);
-      alert(error.response?.data?.message || "Registration failed");
+      toast.error(error.response?.data?.message || "Registration failed");
     }
   };
 

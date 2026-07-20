@@ -5,8 +5,9 @@ import { useNavigate } from "react-router-dom";
 
 import Input from "../common/Input";
 import Button from "../common/Button";
-import api from '../../api/axios'
+import api from '../../api/axios';
 import useAuth from "../../context/useAuth";
+import { useToast } from "../../context/ToastContext";
 
 const LoginForm = () => {
   const [formData, setFormData] = useState({
@@ -16,6 +17,7 @@ const LoginForm = () => {
 
   const navigate = useNavigate();
   const { login } = useAuth();
+  const toast = useToast();
 
   const handleChange = (e) => {
     setFormData((prev) => ({
@@ -36,13 +38,12 @@ const LoginForm = () => {
       localStorage.setItem('user', JSON.stringify(user))
 
       login(user, token);
-
-      navigate('/')
-
-
+      toast.success("Logged in successfully!");
+      navigate('/');
 
     } catch (error) {
       console.error(error);
+      toast.error(error.response?.data?.message || "Failed to log in. Please check your credentials.");
     }
   };
 

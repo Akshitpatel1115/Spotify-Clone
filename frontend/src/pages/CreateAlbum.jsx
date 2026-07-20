@@ -5,6 +5,9 @@ import { FiMusic, FiCheck, FiLoader, FiTrash2 } from "react-icons/fi";
 import Input from "../components/common/Input";
 import Button from "../components/common/Button";
 import useAuth from "../context/useAuth";
+import { usePlayer } from "../context/PlayerContext";
+import { useToast } from "../context/ToastContext";
+import ConfirmDialog from "../components/common/ConfirmDialog";
 
 const CreateAlbum = () => {
   const { user } = useAuth();
@@ -16,6 +19,11 @@ const CreateAlbum = () => {
   const [selectedTrackIds, setSelectedTrackIds] = useState(new Set());
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [trackToDelete, setTrackToDelete] = useState(null);
+  const [confirmMessage, setConfirmMessage] = useState("");
+  
+  const { currentSong, stopSong } = usePlayer();
+  const toast = useToast();
   
   const navigate = useNavigate();
 
@@ -62,7 +70,7 @@ const CreateAlbum = () => {
     });
   };
 
-  const handleTrackDelete = async (e, trackId) => {
+  const initiateTrackDelete = async (e, trackId) => {
     e.stopPropagation();
     try {
       const albums = await getAllAlbums();
@@ -75,22 +83,36 @@ const CreateAlbum = () => {
         album.musics && album.musics.some(m => m === trackId || m._id === trackId)
       );
 
-      const confirmMessage = isInAlbum 
+      setConfirmMessage(isInAlbum 
         ? "This track is currently in one or more of your albums. Deleting it will also remove it from those albums. Are you sure you want to delete it?"
-        : "Are you sure you want to delete this track?";
+        : "Are you sure you want to delete this track?"
+      );
+      setTrackToDelete(trackId);
+    } catch (error) {
+      console.error("Failed to check albums:", error);
+      toast.error("Failed to verify albums before deletion.");
+    }
+  };
 
-      if (window.confirm(confirmMessage)) {
-        await deleteMusic(trackId);
-        setArtistTracks(prev => prev.filter(t => t._id !== trackId));
-        setSelectedTrackIds(prev => {
-          const newSet = new Set(prev);
-          newSet.delete(trackId);
-          return newSet;
-        });
+  const executeTrackDelete = async () => {
+    if (!trackToDelete) return;
+    try {
+      await deleteMusic(trackToDelete);
+      if (currentSong?._id === trackToDelete) {
+        stopSong();
       }
+      setArtistTracks(prev => prev.filter(t => t._id !== trackToDelete));
+      setSelectedTrackIds(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(trackToDelete);
+        return newSet;
+      });
+      toast.success("Track deleted successfully");
     } catch (error) {
       console.error("Failed to delete track:", error);
-      alert(error.response?.data?.message || "Failed to delete track");
+      toast.error(error.response?.data?.message || "Failed to delete track");
+    } finally {
+      setTrackToDelete(null);
     }
   };
 
@@ -98,7 +120,7 @@ const CreateAlbum = () => {
     e.preventDefault();
     
     if (!albumData.title || selectedTrackIds.size === 0) {
-      alert("Please provide an album title and select at least one track.");
+      toast.error("Please provide an album title and select at least one track.");
       return;
     }
 
@@ -110,11 +132,11 @@ const CreateAlbum = () => {
     try {
       setIsSubmitting(true);
       await createAlbum(payload);
-      alert("Album created successfully!");
+      toast.success("Album created successfully!");
       navigate("/album");
     } catch (error) {
       console.error(error);
-      alert(error.response?.data?.message || "Failed to create album");
+      toast.error(error.response?.data?.message || "Failed to create album");
     } finally {
       setIsSubmitting(false);
     }
@@ -189,7 +211,7 @@ const CreateAlbum = () => {
                       </span>
                     </div>
                     <button
-                      onClick={(e) => handleTrackDelete(e, track._id)}
+                      onClick={(e) => initiateTrackDelete(e, track._id)}
                       className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-text-secondary hover:bg-red-500/20 hover:text-red-500 transition-colors"
                       title="Delete Track"
                     >
@@ -209,6 +231,14 @@ const CreateAlbum = () => {
           </Button>
         </div>
       </form>
+      
+      <ConfirmDialog 
+        isOpen={Boolean(trackToDelete)}
+        title="Delete Track"
+        message={confirmMessage}
+        onConfirm={executeTrackDelete}
+        onCancel={() => setTrackToDelete(null)}
+      />
     </div>
   );
 };

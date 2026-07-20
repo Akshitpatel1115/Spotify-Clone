@@ -19,11 +19,17 @@ export const PlayerProvider = ({ children }) => {
     setIsPlaying((prev) => !prev);
   };
 
+  const stopSong = () => {
+    setCurrentSong(null);
+    setIsPlaying(false);
+  };
+
   const contextValue = useMemo(() => ({
     currentSong,
     isPlaying,
     playSong,
     togglePlay,
+    stopSong,
     setIsPlaying,
   }), [currentSong, isPlaying]);
 
