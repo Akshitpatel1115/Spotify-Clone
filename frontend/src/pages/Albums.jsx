@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import AlbumCard from "../components/album/AlbumCard";
 import { getAllAlbums } from "../services/musicService";
+import { FiDisc } from "react-icons/fi";
 
 const Albums = () => {
   const [albums, setAlbums] = useState([]);
@@ -52,18 +53,30 @@ const Albums = () => {
         <h1 className="text-3xl font-bold text-white">All Albums</h1>
       </div>
 
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
-        {albums.map((album) => (
-          <AlbumCard 
-            key={album._id} 
-            album={{ 
-              id: album._id, 
-              title: album.title, 
-              artist: album.artist?.username || "Unknown Artist" 
-            }} 
-          />
-        ))}
-      </div>
+      {albums.length === 0 ? (
+        <div className="flex h-[40vh] w-full flex-col items-center justify-center gap-4 text-center mt-10">
+          <div className="flex h-24 w-24 items-center justify-center rounded-full bg-surface-hover mb-2">
+            <FiDisc className="text-5xl text-text-secondary/50" />
+          </div>
+          <h2 className="text-2xl font-bold text-white">No albums found</h2>
+          <p className="text-text-secondary max-w-sm">
+            It looks like no albums have been created yet. Check back later or ask an artist to compile their tracks!
+          </p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+          {albums.map((album) => (
+            <AlbumCard 
+              key={album._id} 
+              album={{ 
+                id: album._id, 
+                title: album.title, 
+                artist: album.artist?.username || "Unknown Artist" 
+              }} 
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 };
