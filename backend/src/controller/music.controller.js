@@ -133,6 +133,11 @@ async function deleteMusic(req, res) {
       { $pull: { musics: id } }
     );
 
+    // Auto-delete any albums that are now completely empty
+    await albumModel.deleteMany({
+      musics: { $size: 0 }
+    });
+
     res.status(200).json({ message: "Music deleted successfully" });
   } catch (error) {
     console.error("Error deleting music:", error);
