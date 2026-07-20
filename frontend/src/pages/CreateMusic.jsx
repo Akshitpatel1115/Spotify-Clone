@@ -4,6 +4,7 @@ import { createMusic } from "../services/musicService";
 import { FiUploadCloud, FiMusic } from "react-icons/fi";
 import Input from "../components/common/Input";
 import Button from "../components/common/Button";
+import { useToast } from "../context/ToastContext";
 
 const CreateMusic = () => {
   const [musicData, setMusicData] = useState({
@@ -12,6 +13,7 @@ const CreateMusic = () => {
   const [audioFile, setAudioFile] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
+  const toast = useToast();
 
   const handleChange = (e) => {
     setMusicData((prev) => ({
@@ -37,7 +39,7 @@ const CreateMusic = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!audioFile) {
-      alert("Please select an audio file.");
+      toast.error("Please select an audio file.");
       return;
     }
     
@@ -48,11 +50,11 @@ const CreateMusic = () => {
     try {
       setIsSubmitting(true);
       await createMusic(formData);
-      alert("Music uploaded successfully!");
+      toast.success("Music uploaded successfully!");
       navigate("/");
     } catch (error) {
       console.error(error);
-      alert(error.response?.data?.message || "Failed to upload music");
+      toast.error(error.response?.data?.message || "Failed to upload music");
     } finally {
       setIsSubmitting(false);
     }
