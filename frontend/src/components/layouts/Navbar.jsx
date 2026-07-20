@@ -27,22 +27,22 @@ const Navbar = () => {
       </div>
 
       {/* Right side items */}
-      <div className="flex flex-1 items-center justify-end gap-4">
+      <div className="flex flex-1 items-center justify-end gap-2 sm:gap-4 min-w-0">
         {user && (
-          <div className="flex items-center gap-4">
-            <div className="flex flex-col items-end justify-center">
-              <span className="text-sm font-bold text-white">
+          <div className="flex items-center gap-2 sm:gap-4 min-w-0">
+            <div className="flex flex-col items-end justify-center overflow-hidden">
+              <span className="text-sm font-bold text-white truncate max-w-[90px] sm:max-w-[200px]">
                 {user.username || 'User'}
               </span>
               {user.role && (
-                <span className="text-[10px] font-black tracking-widest text-primary uppercase bg-primary/10 px-2 py-0.5 rounded-full mt-0.5">
+                <span className="text-[10px] font-black tracking-widest text-primary uppercase bg-primary/10 px-2 py-0.5 rounded-full mt-0.5 shrink-0">
                   {user.role}
                 </span>
               )}
             </div>
             <button
               onClick={handleLogout}
-              className="flex items-center gap-2 rounded-full bg-surface hover:bg-surface-hover px-3 py-2 sm:px-4 sm:py-2 text-sm font-bold text-white transition-colors border border-border"
+              className="flex shrink-0 items-center gap-2 rounded-full bg-surface hover:bg-surface-hover p-2 sm:px-4 sm:py-2 text-sm font-bold text-white transition-colors border border-border"
               title="Logout"
             >
               <FiLogOut />

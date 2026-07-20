@@ -12,10 +12,10 @@ const Layout = ({ children }) => {
         <Sidebar />
         
         {/* Main Content Area */}
-        <main className="relative flex flex-1 flex-col min-w-0 overflow-y-auto bg-background">
+        <main className="relative flex flex-1 flex-col min-w-0 bg-background overflow-hidden">
           <Navbar />
           
-          <div className="flex-1 p-4 lg:p-8">
+          <div className="flex-1 p-4 lg:p-8 overflow-y-auto custom-scrollbar">
             {<Outlet />}
           </div>
         </main>

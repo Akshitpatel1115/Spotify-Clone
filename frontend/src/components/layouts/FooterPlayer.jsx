@@ -104,11 +104,7 @@ const FooterPlayer = () => {
   };
 
   if (!currentSong) {
-    return (
-      <footer className="h-24 w-full bg-[#181818] border-t border-border flex items-center justify-center px-4 relative z-50">
-        <p className="text-text-secondary text-sm">Select a song to start playing</p>
-      </footer>
-    );
+    return null;
   }
 
   return (

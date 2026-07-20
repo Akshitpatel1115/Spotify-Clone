@@ -1,7 +1,7 @@
 import MusicCard from "../components/music/MusicCard";
 import { useEffect, useState } from "react";
 import { getAllMusic } from "../services/musicService";
-import { FiGrid, FiList } from "react-icons/fi";
+import { FiGrid, FiList, FiMusic } from "react-icons/fi";
 
 const Home = () => {
   const [viewMode, setViewMode] = useState("grid");
@@ -74,14 +74,26 @@ const Home = () => {
         </div>
       </div>
 
-      <div className={viewMode === "grid" 
-        ? "grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6" 
-        : "flex flex-col gap-3 md:grid md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6"
-      }>
-        {musics.map((song) => (
-          <MusicCard key={song._id} song={song} viewMode={viewMode} onDelete={handleTrackDelete} />
-        ))}
-      </div>
+      {musics.length === 0 ? (
+        <div className="flex h-[40vh] w-full flex-col items-center justify-center gap-4 text-center mt-10">
+          <div className="flex h-24 w-24 items-center justify-center rounded-full bg-surface-hover mb-2">
+            <FiMusic className="text-5xl text-text-secondary/50" />
+          </div>
+          <h2 className="text-2xl font-bold text-white">No tracks found</h2>
+          <p className="text-text-secondary max-w-sm">
+            It looks like no music has been uploaded yet. Check back later or ask an artist to upload some tracks!
+          </p>
+        </div>
+      ) : (
+        <div className={viewMode === "grid" 
+          ? "grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6" 
+          : "flex flex-col gap-3 md:grid md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6"
+        }>
+          {musics.map((song) => (
+            <MusicCard key={song._id} song={song} viewMode={viewMode} onDelete={handleTrackDelete} />
+          ))}
+        </div>
+      )}
     </div>
   );
 };
