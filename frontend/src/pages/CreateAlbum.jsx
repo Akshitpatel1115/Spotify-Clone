@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { createAlbum, getAllMusic, deleteMusic } from "../services/musicService";
+import { createAlbum, getAllMusic, deleteMusic, getAllAlbums } from "../services/musicService";
 import { FiMusic, FiCheck, FiLoader, FiTrash2 } from "react-icons/fi";
 import Input from "../components/common/Input";
 import Button from "../components/common/Button";
@@ -64,8 +64,22 @@ const CreateAlbum = () => {
 
   const handleTrackDelete = async (e, trackId) => {
     e.stopPropagation();
-    if (window.confirm("Are you sure you want to delete this track? This will remove it from all albums.")) {
-      try {
+    try {
+      const albums = await getAllAlbums();
+      const userId = user?._id ? user._id.toString() : user?.id?.toString();
+      const myAlbums = albums.filter(a => {
+        const aArtistId = a.artist?._id ? a.artist._id.toString() : a.artist?.toString();
+        return aArtistId === userId;
+      });
+      const isInAlbum = myAlbums.some(album => 
+        album.musics && album.musics.some(m => m === trackId || m._id === trackId)
+      );
+
+      const confirmMessage = isInAlbum 
+        ? "This track is currently in one or more of your albums. Deleting it will also remove it from those albums. Are you sure you want to delete it?"
+        : "Are you sure you want to delete this track?";
+
+      if (window.confirm(confirmMessage)) {
         await deleteMusic(trackId);
         setArtistTracks(prev => prev.filter(t => t._id !== trackId));
         setSelectedTrackIds(prev => {
@@ -73,10 +87,10 @@ const CreateAlbum = () => {
           newSet.delete(trackId);
           return newSet;
         });
-      } catch (error) {
-        console.error("Failed to delete track:", error);
-        alert(error.response?.data?.message || "Failed to delete track");
       }
+    } catch (error) {
+      console.error("Failed to delete track:", error);
+      alert(error.response?.data?.message || "Failed to delete track");
     }
   };
 

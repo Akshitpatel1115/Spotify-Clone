@@ -1,7 +1,7 @@
 import { FiPlay, FiPause, FiMusic, FiTrash2 } from "react-icons/fi";
 import { usePlayer } from "../../context/PlayerContext";
 import useAuth from "../../context/useAuth";
-import { deleteMusic } from "../../services/musicService";
+import { deleteMusic, getAllAlbums } from "../../services/musicService";
 
 const MusicCard = ({ song = {}, viewMode = "grid", onDelete }) => {
   const { currentSong, isPlaying, playSong, togglePlay } = usePlayer();
@@ -12,20 +12,34 @@ const MusicCard = ({ song = {}, viewMode = "grid", onDelete }) => {
   const title = song.title || "Midnight City";
   const artist = song.artist?.username || song.artist || "Unknown Artist";
 
-  const artistId = song.artist?._id || song.artist;
-  const userId = user?.id || user?._id;
-  const isOwner = userId && artistId && userId.toString() === artistId.toString();
+  const artistId = song.artist?._id ? song.artist._id.toString() : song.artist?.toString();
+  const userId = user?._id ? user._id.toString() : user?.id?.toString();
+  const isOwner = user?.role === 'artist' && Boolean(userId) && Boolean(artistId) && userId === artistId;
 
   const handleDelete = async (e) => {
     e.stopPropagation();
-    if (window.confirm("Are you sure you want to delete this track?")) {
-      try {
+    try {
+      // Check if song is in any album
+      const albums = await getAllAlbums();
+      const myAlbums = albums.filter(a => {
+        const aArtistId = a.artist?._id ? a.artist._id.toString() : a.artist?.toString();
+        return aArtistId === userId;
+      });
+      const isInAlbum = myAlbums.some(album => 
+        album.musics && album.musics.some(m => m === song._id || m._id === song._id)
+      );
+
+      const confirmMessage = isInAlbum 
+        ? "This track is currently in one or more of your albums. Deleting it will also remove it from those albums. Are you sure you want to delete it?"
+        : "Are you sure you want to delete this track?";
+
+      if (window.confirm(confirmMessage)) {
         await deleteMusic(song._id);
         if (onDelete) onDelete(song._id);
-      } catch (error) {
-        console.error("Failed to delete:", error);
-        alert(error.response?.data?.message || "Failed to delete track");
       }
+    } catch (error) {
+      console.error("Failed to delete:", error);
+      alert(error.response?.data?.message || "Failed to delete track");
     }
   };
 
@@ -92,20 +106,22 @@ const MusicCard = ({ song = {}, viewMode = "grid", onDelete }) => {
       <div className="relative aspect-square w-full flex items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-surface-hover to-background">
         <FiMusic className="text-5xl text-text-secondary/50 group-hover:text-primary/50 transition-colors duration-300" />
         
+        {/* Delete Button - Top Right */}
+        {isOwner && (
+          <button 
+            onClick={handleDelete}
+            className="absolute top-2 right-2 flex h-8 w-8 items-center justify-center rounded-full bg-black/50 text-text-secondary opacity-0 group-hover:opacity-100 hover:bg-red-500/90 hover:text-white transition-all duration-300 z-10"
+            title="Delete Track"
+          >
+            <FiTrash2 className="text-sm" />
+          </button>
+        )}
+        
         {/* Play Button Overlay */}
         <div className={`absolute bottom-2 right-2 translate-y-4 transition-all duration-300 group-hover:translate-y-0 ${
           isCurrentSong ? "opacity-100 translate-y-0" : "opacity-0 group-hover:opacity-100"
         }`}>
           <div className="flex flex-col gap-2 items-center">
-            {isOwner && (
-              <button 
-                onClick={handleDelete}
-                className="flex h-8 w-8 items-center justify-center rounded-full bg-red-500/80 text-white shadow-lg shadow-black/40 transition-transform duration-300 hover:scale-105 hover:bg-red-500 active:scale-95"
-                title="Delete Track"
-              >
-                <FiTrash2 className="text-sm" />
-              </button>
-            )}
             <button 
               onClick={(e) => {
               e.stopPropagation();

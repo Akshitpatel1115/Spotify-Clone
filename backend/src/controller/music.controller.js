@@ -91,7 +91,7 @@ async function getAllMusics(req, res) {
 async function getAllAlbums(req, res) {
   const albums = await albumModel
     .find()
-    .select("title artist")
+    .select("title artist musics")
     .populate("artist", "username email");
 
   res.status(200).json({
