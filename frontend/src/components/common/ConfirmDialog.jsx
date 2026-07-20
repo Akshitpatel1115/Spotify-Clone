@@ -1,10 +1,11 @@
 import React from 'react';
+import { createPortal } from 'react-dom';
 import { FiAlertTriangle } from 'react-icons/fi';
 
 const ConfirmDialog = ({ isOpen, title, message, onConfirm, onCancel }) => {
   if (!isOpen) return null;
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
       <div 
         className="w-full max-w-md rounded-2xl bg-surface border border-border/50 p-6 shadow-2xl shadow-black/80 transform transition-all"
@@ -42,7 +43,8 @@ const ConfirmDialog = ({ isOpen, title, message, onConfirm, onCancel }) => {
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 
