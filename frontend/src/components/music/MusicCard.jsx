@@ -1,13 +1,33 @@
-import { FiPlay, FiPause, FiMusic } from "react-icons/fi";
+import { FiPlay, FiPause, FiMusic, FiTrash2 } from "react-icons/fi";
 import { usePlayer } from "../../context/PlayerContext";
+import useAuth from "../../context/useAuth";
+import { deleteMusic } from "../../services/musicService";
 
-const MusicCard = ({ song = {}, viewMode = "grid" }) => {
+const MusicCard = ({ song = {}, viewMode = "grid", onDelete }) => {
   const { currentSong, isPlaying, playSong, togglePlay } = usePlayer();
+  const { user } = useAuth();
   const isCurrentSong = currentSong?._id === song._id;
   const isCurrentlyPlaying = isCurrentSong && isPlaying;
 
   const title = song.title || "Midnight City";
   const artist = song.artist?.username || song.artist || "Unknown Artist";
+
+  const artistId = song.artist?._id || song.artist;
+  const userId = user?.id || user?._id;
+  const isOwner = userId && artistId && userId.toString() === artistId.toString();
+
+  const handleDelete = async (e) => {
+    e.stopPropagation();
+    if (window.confirm("Are you sure you want to delete this track?")) {
+      try {
+        await deleteMusic(song._id);
+        if (onDelete) onDelete(song._id);
+      } catch (error) {
+        console.error("Failed to delete:", error);
+        alert(error.response?.data?.message || "Failed to delete track");
+      }
+    }
+  };
 
   if (viewMode === "list") {
     return (
@@ -43,6 +63,15 @@ const MusicCard = ({ song = {}, viewMode = "grid" }) => {
           <h3 className={`truncate text-sm font-semibold ${isCurrentSong ? "text-primary" : "text-white"}`}>{title}</h3>
           <p className="truncate text-xs text-text-secondary mt-0.5">{artist}</p>
         </div>
+        {isOwner && (
+          <button 
+            onClick={handleDelete}
+            className="flex items-center justify-center p-2 text-text-secondary hover:text-red-500 transition-colors ml-auto md:ml-0"
+            title="Delete Track"
+          >
+            <FiTrash2 />
+          </button>
+        )}
       </div>
     );
   }
@@ -67,8 +96,18 @@ const MusicCard = ({ song = {}, viewMode = "grid" }) => {
         <div className={`absolute bottom-2 right-2 translate-y-4 transition-all duration-300 group-hover:translate-y-0 ${
           isCurrentSong ? "opacity-100 translate-y-0" : "opacity-0 group-hover:opacity-100"
         }`}>
-          <button 
-            onClick={(e) => {
+          <div className="flex flex-col gap-2 items-center">
+            {isOwner && (
+              <button 
+                onClick={handleDelete}
+                className="flex h-8 w-8 items-center justify-center rounded-full bg-red-500/80 text-white shadow-lg shadow-black/40 transition-transform duration-300 hover:scale-105 hover:bg-red-500 active:scale-95"
+                title="Delete Track"
+              >
+                <FiTrash2 className="text-sm" />
+              </button>
+            )}
+            <button 
+              onClick={(e) => {
               e.stopPropagation();
               if (isCurrentSong) togglePlay();
               else playSong(song);
@@ -80,7 +119,8 @@ const MusicCard = ({ song = {}, viewMode = "grid" }) => {
             ) : (
               <FiPlay className="ml-1 text-xl fill-black" />
             )}
-          </button>
+            </button>
+          </div>
         </div>
       </div>
 

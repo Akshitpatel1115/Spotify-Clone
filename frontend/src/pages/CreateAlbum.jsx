@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { createAlbum, getAllMusic } from "../services/musicService";
-import { FiMusic, FiCheck, FiLoader } from "react-icons/fi";
+import { createAlbum, getAllMusic, deleteMusic } from "../services/musicService";
+import { FiMusic, FiCheck, FiLoader, FiTrash2 } from "react-icons/fi";
 import Input from "../components/common/Input";
 import Button from "../components/common/Button";
 import useAuth from "../context/useAuth";
@@ -60,6 +60,24 @@ const CreateAlbum = () => {
       }
       return newSet;
     });
+  };
+
+  const handleTrackDelete = async (e, trackId) => {
+    e.stopPropagation();
+    if (window.confirm("Are you sure you want to delete this track? This will remove it from all albums.")) {
+      try {
+        await deleteMusic(trackId);
+        setArtistTracks(prev => prev.filter(t => t._id !== trackId));
+        setSelectedTrackIds(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(trackId);
+          return newSet;
+        });
+      } catch (error) {
+        console.error("Failed to delete track:", error);
+        alert(error.response?.data?.message || "Failed to delete track");
+      }
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -156,6 +174,13 @@ const CreateAlbum = () => {
                         {track.title}
                       </span>
                     </div>
+                    <button
+                      onClick={(e) => handleTrackDelete(e, track._id)}
+                      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-text-secondary hover:bg-red-500/20 hover:text-red-500 transition-colors"
+                      title="Delete Track"
+                    >
+                      <FiTrash2 />
+                    </button>
                   </div>
                 );
               })}

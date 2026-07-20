@@ -111,10 +111,40 @@ async function getAlbumById(req, res) {
   });
 }
 
+async function deleteMusic(req, res) {
+  try {
+    const { id } = req.params;
+
+    const music = await musicModel.findById(id);
+
+    if (!music) {
+      return res.status(404).json({ message: "Music not found" });
+    }
+
+    if (music.artist.toString() !== req.user.id) {
+      return res.status(403).json({ message: "You don't have permission to delete this music." });
+    }
+
+    await musicModel.findByIdAndDelete(id);
+
+    // Clean up albums that contain this track
+    await albumModel.updateMany(
+      { musics: id },
+      { $pull: { musics: id } }
+    );
+
+    res.status(200).json({ message: "Music deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting music:", error);
+    res.status(500).json({ message: error.message || "Internal server error" });
+  }
+}
+
 module.exports = {
   createMusic,
   createAlbum,
   getAllMusics,
   getAllAlbums,
   getAlbumById,
+  deleteMusic,
 };

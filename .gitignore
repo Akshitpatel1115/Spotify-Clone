@@ -23,6 +23,7 @@ yarn-debug.log*
 yarn-error.log*
 logs
 *.log
+ai_changes.log
 
 # OS Generated Files
 .DS_Store

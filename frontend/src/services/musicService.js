@@ -19,6 +19,11 @@ export const createAlbum = async (payload) => {
   return response.data;
 };
 
+export const deleteMusic = async (id) => {
+  const response = await api.delete(`/music/${id}`);
+  return response.data;
+};
+
 export const getAllAlbums = async () => {
   const response = await api.get("/music/albums");
   return response.data.albums;
