@@ -110,7 +110,7 @@ const MusicCard = ({ song = {}, viewMode = "grid", onDelete }) => {
         {isOwner && (
           <button 
             onClick={handleDelete}
-            className="absolute top-2 right-2 flex h-8 w-8 items-center justify-center rounded-full bg-black/50 text-text-secondary opacity-0 group-hover:opacity-100 hover:bg-red-500/90 hover:text-white transition-all duration-300 z-10"
+            className="absolute top-2 right-2 flex h-8 w-8 items-center justify-center rounded-full bg-black/60 text-white md:text-text-secondary opacity-100 md:opacity-0 group-hover:opacity-100 hover:bg-red-500 hover:text-white transition-all duration-300 z-10 shadow-md"
             title="Delete Track"
           >
             <FiTrash2 className="text-sm" />

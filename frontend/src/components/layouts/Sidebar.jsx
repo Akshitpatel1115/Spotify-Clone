@@ -28,10 +28,10 @@ const Sidebar = () => {
     <aside className="hidden md:flex flex-col h-full bg-surface border-r border-border transition-all duration-300 md:w-20 lg:w-64 p-4">
       {/* Logo */}
       <div className="flex items-center gap-3 mb-8 lg:px-2">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary text-xl font-bold text-white">
+        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary text-2xl font-bold text-black">
           ♫
         </div>
-        <span className="hidden lg:block text-xl font-bold text-white tracking-wide">
+        <span className="hidden lg:block text-2xl font-bold text-white tracking-wide">
           Spotify
         </span>
       </div>
