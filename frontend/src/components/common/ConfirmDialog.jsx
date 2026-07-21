@@ -39,7 +39,7 @@ const ConfirmDialog = ({ isOpen, title, message, onConfirm, onCancel }) => {
             }}
             className="rounded-full bg-red-500 hover:bg-red-600 active:scale-95 px-5 py-2.5 text-sm font-bold text-white transition-all shadow-lg shadow-red-500/20"
           >
-            Yes, delete
+            Yes
           </button>
         </div>
       </div>
