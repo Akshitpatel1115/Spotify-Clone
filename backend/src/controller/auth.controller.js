@@ -126,4 +126,75 @@ async function logout(req, res) {
   });
 }
 
-module.exports = { register, login, logout };
+async function verifyEmail(req, res) {
+  try {
+    const { email, otp } = req.body;
+
+    // Step 1: Validate
+    if (!email || !otp) {
+      return res.status(400).json({ message: "Email and OTP are required" });
+    }
+
+    // Step 2: Find Pending User
+    const pendingUser = await PendingUser.findOne({ email });
+
+    if (!pendingUser) {
+      return res.status(404).json({
+        message: "No pending registration found for this email. It may have expired.",
+      });
+    }
+
+    // Step 3: Check Registration Expired (Failsafe for TTL)
+    if (pendingUser.expiresAt < new Date()) {
+      await PendingUser.deleteOne({ _id: pendingUser._id });
+      return res.status(400).json({
+        message: "Registration window has expired. Please register again.",
+      });
+    }
+
+    // Step 4: Check OTP Expired
+    if (pendingUser.otpExpiresAt < new Date()) {
+      return res.status(400).json({
+        message: "OTP has expired. Please request a new one.",
+      });
+    }
+
+    // Step 5: Compare OTP using bcrypt
+    const isOtpValid = await bcrypt.compare(otp, pendingUser.otp);
+
+    // Step 6: If OTP is incorrect
+    if (!isOtpValid) {
+      return res.status(401).json({ message: "Invalid OTP." });
+    }
+
+    // Step 7: Create Real User
+    // Double check that the real user wasn't somehow created already
+    const existingUser = await userModel.findOne({ email });
+    if (existingUser) {
+      await PendingUser.deleteOne({ _id: pendingUser._id });
+      return res.status(409).json({ message: "User already exists." });
+    }
+
+    const newUser = await userModel.create({
+      username: pendingUser.username,
+      email: pendingUser.email,
+      password: pendingUser.password, // Already hashed
+      role: pendingUser.role,
+    });
+
+    // Step 8: Delete Pending User
+    await PendingUser.deleteOne({ _id: pendingUser._id });
+
+    // Step 9: Return Success
+    return res.status(200).json({
+      success: true,
+      message: "Email verified successfully. Please login to continue.",
+    });
+
+  } catch (error) {
+    console.error("Verification Error:", error);
+    return res.status(500).json({ message: "Internal server error during verification." });
+  }
+}
+
+module.exports = { register, verifyEmail, login, logout };

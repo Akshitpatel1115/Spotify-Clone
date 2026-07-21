@@ -16,7 +16,8 @@ const RegisterForm = () => {
     role: "user",
   });
   const [isLoading, setIsLoading] = useState(false);
-
+  const [isOtpStep, setIsOtpStep] = useState(false);
+  const [otp, setOtp] = useState("");
   const navigate = useNavigate();
   const toast = useToast();
 
@@ -64,7 +65,7 @@ const RegisterForm = () => {
       const response = await api.post("/auth/register", formData);
       console.log("Backend response received:", response.data);
       toast.success("OTP sent to your email successfully!");
-      navigate("/login");
+      setIsOtpStep(true);
     } catch (error) {
       console.error("Error from backend:", error);
       toast.error(error.response?.data?.message || "Registration failed");
@@ -73,6 +74,55 @@ const RegisterForm = () => {
       setIsLoading(false);
     }
   };
+
+  const handleVerifyOtp = async (e) => {
+    e.preventDefault();
+    if (otp.length !== 6) {
+      toast.error("Please enter a valid 6-digit OTP.");
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      await api.post("/auth/verify-email", { email: formData.email, otp });
+      toast.success("Email verified successfully! You can now login.");
+      navigate("/login");
+    } catch (error) {
+      console.error("OTP Verification failed:", error);
+      toast.error(error.response?.data?.message || "Invalid OTP");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  if (isOtpStep) {
+    return (
+      <div className="w-full max-w-lg rounded-3xl border border-border bg-surface p-5 shadow-2xl">
+        <div className="mb-6 text-center">
+          <h1 className="text-3xl font-bold text-white">Verify Email</h1>
+          <p className="mt-2 text-gray-400">
+            We've sent a 6-digit verification code to <strong>{formData.email}</strong>.
+          </p>
+        </div>
+        <form onSubmit={handleVerifyOtp} className="space-y-4">
+          <Input
+            label="Verification Code (OTP)"
+            type="text"
+            name="otp"
+            placeholder="Enter 6-digit code"
+            value={otp}
+            onChange={(e) => setOtp(e.target.value)}
+            icon={FiLock}
+            required
+            maxLength={6}
+          />
+          <Button type="submit" disabled={isLoading}>
+            {isLoading ? "Verifying..." : "Verify OTP"}
+          </Button>
+        </form>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full max-w-lg rounded-3xl border border-border bg-surface p-5 shadow-2xl">
