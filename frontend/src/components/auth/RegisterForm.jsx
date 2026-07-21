@@ -15,6 +15,7 @@ const RegisterForm = () => {
     password: "",
     role: "user",
   });
+  const [isLoading, setIsLoading] = useState(false);
 
   const navigate = useNavigate();
   const toast = useToast();
@@ -35,9 +36,11 @@ const RegisterForm = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    console.log("Register button clicked. Validating form data...");
 
     const usernameRegex = /^[a-zA-Z][a-zA-Z0-9]{5,}$/;
     if (!usernameRegex.test(formData.username)) {
+      console.log("Validation failed: Username invalid.");
       toast.error("Username must be at least 6 characters, start with a letter, and contain no spaces or special characters.");
       return;
     }
@@ -49,17 +52,25 @@ const RegisterForm = () => {
     }
 
     if (formData.password.length < 6) {
+      console.log("Validation failed: Password too short.");
       toast.error("Password must be at least 6 characters long.");
       return;
     }
 
+    console.log("Validation passed. Sending request to backend...");
+    setIsLoading(true);
+
     try {
-      await api.post("/auth/register", formData);
-      toast.success("Account created successfully!");
+      const response = await api.post("/auth/register", formData);
+      console.log("Backend response received:", response.data);
+      toast.success("OTP sent to your email successfully!");
       navigate("/login");
     } catch (error) {
-      console.error(error);
+      console.error("Error from backend:", error);
       toast.error(error.response?.data?.message || "Registration failed");
+    } finally {
+      console.log("Registration request finished.");
+      setIsLoading(false);
     }
   };
 
@@ -116,8 +127,8 @@ const RegisterForm = () => {
           onChange={handleRoleChange}
         />
 
-        <Button type="submit">
-          Create Account
+        <Button type="submit" disabled={isLoading}>
+          {isLoading ? "Sending OTP..." : "Create Account"}
         </Button>
       </form>
 
