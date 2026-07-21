@@ -1,6 +1,9 @@
 const userModel = require("../models/user.model");
+const PendingUser = require("../models/pendingUser.model");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
+const crypto = require("crypto");
+const { sendOTPEmail } = require("../utils/email");
 
 const cookieOptions = {
   httpOnly: true,
@@ -10,40 +13,72 @@ const cookieOptions = {
 };
 
 async function register(req, res) {
-  const { username, email, password, role = "user" } = req.body;
+  try {
+    const { username, email, password, role = "user" } = req.body;
 
-  const isUserAlreadyExist = await userModel.findOne({
-    $or: [{ username }, { email }],
-  });
+    // Step 1: Validate
+    if (!username || !email || !password) {
+      return res.status(400).json({ message: "All fields are required" });
+    }
 
-  if (isUserAlreadyExist) {
-    return res.status(409).json({
-      message: "User already exist.",
+    // Step 2: Check Users Collection
+    const isUserAlreadyExist = await userModel.findOne({
+      $or: [{ username }, { email }],
     });
+
+    if (isUserAlreadyExist) {
+      return res.status(409).json({
+        message: "User already exists. Please log in.",
+      });
+    }
+
+    // Step 3: Check PendingUsers Collection
+    const isUserPending = await PendingUser.findOne({ email });
+
+    if (isUserPending) {
+      // If resend is available, they can request a new one, but they cannot register again yet
+      return res.status(409).json({
+        message: "Registration is pending. Please verify your OTP to continue.",
+      });
+    }
+
+    // Step 4: Hash Password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Step 5: Generate secure 6-digit OTP
+    const otp = crypto.randomInt(100000, 999999).toString();
+
+    // Step 6: Hash OTP
+    const hashedOtp = await bcrypt.hash(otp, 10);
+
+    // Step 7: Store inside PendingUsers
+    const otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+    const resendAvailableAt = new Date(Date.now() + 2 * 60 * 1000); // 2 minutes
+    const expiresAt = new Date(Date.now() + 30 * 60 * 1000); // 30 minutes (TTL)
+
+    await PendingUser.create({
+      username,
+      email,
+      password: hashedPassword,
+      role,
+      otp: hashedOtp,
+      otpExpiresAt,
+      resendAvailableAt,
+      expiresAt
+    });
+
+    // Step 8: Send OTP email
+    await sendOTPEmail(email, otp);
+
+    // Step 9: Return success response
+    return res.status(201).json({
+      message: "Registration step 1 complete. OTP sent to your email.",
+    });
+
+  } catch (error) {
+    console.error("Registration Error:", error);
+    return res.status(500).json({ message: "Internal server error during registration." });
   }
-
-  const hash = await bcrypt.hash(password, 10);
-
-  const user = await userModel.create({
-    username,
-    email,
-    password: hash,
-    role,
-  });
-
-  const token = jwt.sign(
-    {
-      id: user._id,
-      role: user.role,
-    },
-    process.env.JWT_SECRET,
-  );
-
-  res.cookie("token", token, cookieOptions);
-
-  res.status(201).json({
-    message: "User register successfuly.",
-  });
 }
 
 async function login(req, res) {
