@@ -36,8 +36,9 @@ const RegisterForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (formData.username.trim().length < 3) {
-      toast.error("Username must be at least 3 characters long.");
+    const usernameRegex = /^[a-zA-Z][a-zA-Z0-9]{5,}$/;
+    if (!usernameRegex.test(formData.username)) {
+      toast.error("Username must be at least 6 characters, start with a letter, and contain no spaces or special characters.");
       return;
     }
 
