@@ -3,8 +3,15 @@ import Sidebar from "./Sidebar";
 import Navbar from "./Navbar";
 import FooterPlayer from "./FooterPlayer";
 import MobileBottomNav from "./MobileBottomNav";
+import { usePlayer } from "../../context/PlayerContext";
 
 const Layout = ({ children }) => {
+  const { currentSong } = usePlayer();
+
+  const paddingClass = currentSong 
+    ? "pb-[160px] md:pb-24" 
+    : "pb-16 md:pb-0";
+
   return (
     <div className="flex h-[100dvh] w-full flex-col overflow-hidden bg-[#121212] text-white">
       {/* Top Section: Sidebar + Main Content */}
@@ -12,7 +19,7 @@ const Layout = ({ children }) => {
         <Sidebar />
         
         {/* Main Content Area */}
-        <main className="relative flex flex-1 flex-col min-w-0 bg-background overflow-hidden pb-[140px] md:pb-24">
+        <main className={`relative flex flex-1 flex-col min-w-0 bg-background overflow-hidden ${paddingClass}`}>
           <Navbar />
           
           <div className="flex-1 p-4 lg:p-8 overflow-y-auto custom-scrollbar">
