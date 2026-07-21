@@ -68,7 +68,13 @@ const RegisterForm = () => {
       setIsOtpStep(true);
     } catch (error) {
       console.error("Error from backend:", error);
-      toast.error(error.response?.data?.message || "Registration failed");
+      const errorMessage = error.response?.data?.message || "Registration failed";
+      toast.error(errorMessage);
+      
+      // If the backend says the registration is already pending, let them enter the OTP anyway!
+      if (error.response?.status === 409 && errorMessage.includes("pending")) {
+        setIsOtpStep(true);
+      }
     } finally {
       console.log("Registration request finished.");
       setIsLoading(false);
