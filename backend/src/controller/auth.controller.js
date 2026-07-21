@@ -14,6 +14,7 @@ const cookieOptions = {
 
 async function register(req, res) {
   try {
+    console.log("[Register] API hit");
     const { username, email, password, role = "user" } = req.body;
 
     // Step 1: Validate
@@ -22,6 +23,7 @@ async function register(req, res) {
     }
 
     // Step 2: Check Users Collection
+    console.log("[Register] Checking Users collection...");
     const isUserAlreadyExist = await userModel.findOne({
       $or: [{ username }, { email }],
     });
@@ -33,28 +35,31 @@ async function register(req, res) {
     }
 
     // Step 3: Check PendingUsers Collection
+    console.log("[Register] Checking PendingUsers collection...");
     const isUserPending = await PendingUser.findOne({ email });
 
     if (isUserPending) {
-      // If resend is available, they can request a new one, but they cannot register again yet
       return res.status(409).json({
         message: "Registration is pending. Please verify your OTP to continue.",
       });
     }
 
     // Step 4: Hash Password
+    console.log("[Register] Hashing password...");
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // Step 5: Generate secure 6-digit OTP
     const otp = crypto.randomInt(100000, 999999).toString();
 
     // Step 6: Hash OTP
+    console.log("[Register] Hashing OTP...");
     const hashedOtp = await bcrypt.hash(otp, 10);
 
     // Step 7: Store inside PendingUsers
-    const otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
-    const resendAvailableAt = new Date(Date.now() + 2 * 60 * 1000); // 2 minutes
-    const expiresAt = new Date(Date.now() + 30 * 60 * 1000); // 30 minutes (TTL)
+    console.log("[Register] Saving to PendingUsers DB...");
+    const otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000);
+    const resendAvailableAt = new Date(Date.now() + 2 * 60 * 1000);
+    const expiresAt = new Date(Date.now() + 30 * 60 * 1000);
 
     await PendingUser.create({
       username,
@@ -68,7 +73,9 @@ async function register(req, res) {
     });
 
     // Step 8: Send OTP email
+    console.log("[Register] Handing off to Nodemailer...");
     await sendOTPEmail(email, otp);
+    console.log("[Register] Email sent successfully!");
 
     // Step 9: Return success response
     return res.status(201).json({
@@ -76,7 +83,7 @@ async function register(req, res) {
     });
 
   } catch (error) {
-    console.error("Registration Error:", error);
+    console.error("[Register] Error:", error);
     return res.status(500).json({ message: "Internal server error during registration." });
   }
 }

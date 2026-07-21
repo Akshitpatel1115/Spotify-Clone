@@ -15,6 +15,9 @@ const transporter = nodemailer.createTransport({
     pass: process.env.SMTP_PASS,
   },
   family: 4, // Force IPv4 directly at the socket level (fixes Render ENETUNREACH issues)
+  connectionTimeout: 10000, // 10 seconds timeout so it doesn't hang forever
+  greetingTimeout: 10000,
+  socketTimeout: 10000,
 });
 
 /**
@@ -24,6 +27,7 @@ const transporter = nodemailer.createTransport({
  * @param {string} otp - The plain 6-digit OTP.
  */
 const sendOTPEmail = async (to, otp) => {
+  console.log(`[Email Service] Attempting to send OTP to ${to}...`);
   const mailOptions = {
     from: `"Spotify Clone" <${process.env.SMTP_USER}>`,
     to: to,
