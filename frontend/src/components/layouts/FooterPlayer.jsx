@@ -11,7 +11,7 @@ import {
 } from "react-icons/fi";
 
 const FooterPlayer = () => {
-  const { currentSong, isPlaying, togglePlay } = usePlayer();
+  const { currentSong, isPlaying, togglePlay, playNext, playPrevious } = usePlayer();
   const audioRef = useRef(null);
   const progressBarRef = useRef(null);
   const volumeBarRef = useRef(null);
@@ -136,7 +136,10 @@ const FooterPlayer = () => {
       {/* Center: Player Controls */}
       <div className="flex flex-col items-center justify-center w-full max-w-md gap-2">
         <div className="flex items-center gap-4 sm:gap-6">
-          <button className="text-text-secondary hover:text-white transition">
+          <button 
+            onClick={playPrevious}
+            className="text-text-secondary hover:text-white transition active:scale-95"
+          >
             <FiSkipBack className="text-xl" />
           </button>
           
@@ -151,7 +154,10 @@ const FooterPlayer = () => {
             )}
           </button>
 
-          <button className="text-text-secondary hover:text-white transition">
+          <button 
+            onClick={playNext}
+            className="text-text-secondary hover:text-white transition active:scale-95"
+          >
             <FiSkipForward className="text-xl" />
           </button>
         </div>
@@ -206,7 +212,7 @@ const FooterPlayer = () => {
         src={currentSong.uri}
         onTimeUpdate={handleTimeUpdate}
         onLoadedMetadata={handleLoadedMetadata}
-        onEnded={() => togglePlay()}
+        onEnded={playNext}
       />
     </footer>
   );

@@ -80,11 +80,11 @@ const AlbumDetails = () => {
         <button 
           onClick={() => {
             if (album.musics?.length > 0) {
-              const firstTrack = album.musics[0];
-              playSong({
-                ...firstTrack,
-                artist: typeof firstTrack.artist === "string" ? album.artist : (firstTrack.artist || album.artist)
-              });
+              const formattedQueue = album.musics.map(t => ({
+                ...t,
+                artist: typeof t.artist === "string" ? album.artist : (t.artist || album.artist)
+              }));
+              playSong(formattedQueue[0], formattedQueue);
             }
           }}
           className="flex h-14 w-14 items-center justify-center rounded-full bg-primary text-black transition-transform hover:scale-105 active:scale-95 shadow-lg hover:bg-primary-hover"
@@ -112,10 +112,13 @@ const AlbumDetails = () => {
                 onClick={() => {
                   if (isCurrentTrack) togglePlay();
                   else {
-                    playSong({
-                      ...track,
-                      artist: typeof track.artist === "string" ? album.artist : (track.artist || album.artist)
-                    });
+                    const formattedQueue = album.musics.map(t => ({
+                      ...t,
+                      artist: typeof t.artist === "string" ? album.artist : (t.artist || album.artist)
+                    }));
+                    
+                    const trackToPlay = formattedQueue.find(t => t._id === track._id);
+                    playSong(trackToPlay, formattedQueue);
                   }
                 }}
                 className={`group grid grid-cols-[auto_1fr_auto] items-center gap-4 rounded-md px-4 py-3 transition-colors cursor-pointer ${

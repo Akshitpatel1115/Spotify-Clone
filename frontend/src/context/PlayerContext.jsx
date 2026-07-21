@@ -9,10 +9,32 @@ export const usePlayer = () => {
 export const PlayerProvider = ({ children }) => {
   const [currentSong, setCurrentSong] = useState(null);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [queue, setQueue] = useState([]);
 
-  const playSong = (song) => {
+  const playSong = (song, newQueue = []) => {
     setCurrentSong(song);
     setIsPlaying(true);
+    if (newQueue && newQueue.length > 0) {
+      setQueue(newQueue);
+    } else if (queue.length === 0) {
+      setQueue([song]);
+    }
+  };
+
+  const playNext = () => {
+    if (!currentSong || queue.length === 0) return;
+    const currentIndex = queue.findIndex(s => s._id === currentSong._id);
+    if (currentIndex !== -1 && currentIndex < queue.length - 1) {
+      playSong(queue[currentIndex + 1], queue);
+    }
+  };
+
+  const playPrevious = () => {
+    if (!currentSong || queue.length === 0) return;
+    const currentIndex = queue.findIndex(s => s._id === currentSong._id);
+    if (currentIndex > 0) {
+      playSong(queue[currentIndex - 1], queue);
+    }
   };
 
   const togglePlay = () => {
@@ -22,16 +44,20 @@ export const PlayerProvider = ({ children }) => {
   const stopSong = () => {
     setCurrentSong(null);
     setIsPlaying(false);
+    setQueue([]);
   };
 
   const contextValue = useMemo(() => ({
     currentSong,
     isPlaying,
+    queue,
     playSong,
+    playNext,
+    playPrevious,
     togglePlay,
     stopSong,
     setIsPlaying,
-  }), [currentSong, isPlaying]);
+  }), [currentSong, isPlaying, queue]);
 
   return (
     <PlayerContext.Provider value={contextValue}>

@@ -6,7 +6,7 @@ import { useToast } from "../../context/ToastContext";
 import ConfirmDialog from "../common/ConfirmDialog";
 import { deleteMusic, getAllAlbums } from "../../services/musicService";
 
-const MusicCard = ({ song = {}, viewMode = "grid", onDelete }) => {
+const MusicCard = ({ song = {}, queue = [], viewMode = "grid", onDelete }) => {
   const { currentSong, isPlaying, playSong, togglePlay, stopSong } = usePlayer();
   const { user } = useAuth();
   const toast = useToast();
@@ -68,7 +68,7 @@ const MusicCard = ({ song = {}, viewMode = "grid", onDelete }) => {
       <div 
         onClick={() => {
           if (isCurrentSong) togglePlay();
-          else playSong(song);
+          else playSong(song, queue);
         }}
         className={`group relative flex items-center gap-4 rounded-xl p-3 transition-all duration-200 cursor-pointer border md:hidden ${
           isCurrentSong 
@@ -85,7 +85,7 @@ const MusicCard = ({ song = {}, viewMode = "grid", onDelete }) => {
               onClick={(e) => {
                 e.stopPropagation();
                 if (isCurrentSong) togglePlay();
-                else playSong(song);
+                else playSong(song, queue);
               }}
               className="text-white"
             >
@@ -121,7 +121,7 @@ const MusicCard = ({ song = {}, viewMode = "grid", onDelete }) => {
     <div 
       onClick={() => {
         if (isCurrentSong) togglePlay();
-        else playSong(song);
+        else playSong(song, queue);
       }}
       className={`group relative flex flex-col gap-3 rounded-2xl p-4 transition-all duration-300 hover:-translate-y-1 cursor-pointer border ${
         isCurrentSong 
@@ -153,7 +153,7 @@ const MusicCard = ({ song = {}, viewMode = "grid", onDelete }) => {
               onClick={(e) => {
               e.stopPropagation();
               if (isCurrentSong) togglePlay();
-              else playSong(song);
+              else playSong(song, queue);
             }}
             className="flex h-12 w-12 items-center justify-center rounded-full bg-primary text-black shadow-lg shadow-black/40 transition-transform duration-300 hover:scale-105 hover:bg-primary-hover active:scale-95"
           >

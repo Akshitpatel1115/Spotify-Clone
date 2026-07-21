@@ -90,7 +90,7 @@ const Home = () => {
           : "flex flex-col gap-3 md:grid md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6"
         }>
           {musics.map((song) => (
-            <MusicCard key={song._id} song={song} viewMode={viewMode} onDelete={handleTrackDelete} />
+            <MusicCard key={song._id} song={song} queue={musics} viewMode={viewMode} onDelete={handleTrackDelete} />
           ))}
         </div>
       )}
