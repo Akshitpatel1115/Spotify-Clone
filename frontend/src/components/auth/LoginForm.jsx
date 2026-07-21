@@ -29,6 +29,12 @@ const LoginForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      toast.error("Please enter a valid email address.");
+      return;
+    }
+
     try {
       const response = await api.post("/auth/login", formData);
 

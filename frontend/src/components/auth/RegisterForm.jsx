@@ -36,6 +36,22 @@ const RegisterForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    if (formData.username.trim().length < 3) {
+      toast.error("Username must be at least 3 characters long.");
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      toast.error("Please enter a valid email address.");
+      return;
+    }
+
+    if (formData.password.length < 6) {
+      toast.error("Password must be at least 6 characters long.");
+      return;
+    }
+
     try {
       await api.post("/auth/register", formData);
       toast.success("Account created successfully!");

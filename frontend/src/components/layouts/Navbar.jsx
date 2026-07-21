@@ -1,13 +1,17 @@
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import useAuth from "../../context/useAuth";
 import api from "../../api/axios";
 import { FiLogOut } from "react-icons/fi";
+import ConfirmDialog from "../common/ConfirmDialog";
 
 const Navbar = () => {
   const { signOut, user } = useAuth();
   const navigate = useNavigate();
 
-  const handleLogout = async () => {
+  const [showLogoutDialog, setShowLogoutDialog] = useState(false);
+
+  const confirmLogout = async () => {
     try {
       await api.post("/auth/logout");
       signOut();
@@ -15,6 +19,10 @@ const Navbar = () => {
     } catch (err) {
       console.error(err);
     }
+  };
+
+  const handleLogout = () => {
+    setShowLogoutDialog(true);
   };
   return (
     <header className="sticky top-0 z-50 flex h-16 w-full items-center justify-between bg-[#121212]/90 px-4 backdrop-blur-md lg:px-8 border-b border-border/30">
@@ -51,6 +59,14 @@ const Navbar = () => {
           </div>
         )}
       </div>
+
+      <ConfirmDialog 
+        isOpen={showLogoutDialog}
+        title="Logout"
+        message="Are you sure you want to log out?"
+        onConfirm={confirmLogout}
+        onCancel={() => setShowLogoutDialog(false)}
+      />
     </header>
   );
 };

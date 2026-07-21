@@ -1,13 +1,17 @@
+import { useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { FiHome, FiDisc, FiPlusSquare, FiMusic, FiLogIn, FiLogOut } from "react-icons/fi";
 import useAuth from "../../context/useAuth";
 import api from "../../api/axios";
+import ConfirmDialog from "../common/ConfirmDialog";
 
 const MobileBottomNav = () => {
   const { user, isAuthenticated, signOut } = useAuth();
   const navigate = useNavigate();
 
-  const handleLogout = async () => {
+  const [showLogoutDialog, setShowLogoutDialog] = useState(false);
+
+  const confirmLogout = async () => {
     try {
       await api.post("/auth/logout");
       signOut();
@@ -15,6 +19,10 @@ const MobileBottomNav = () => {
     } catch (err) {
       console.error(err);
     }
+  };
+
+  const handleLogout = () => {
+    setShowLogoutDialog(true);
   };
 
   const navLinks = [
@@ -70,6 +78,14 @@ const MobileBottomNav = () => {
           <span className="text-[10px] font-medium tracking-wide">Logout</span>
         </button>
       )}
+
+      <ConfirmDialog 
+        isOpen={showLogoutDialog}
+        title="Logout"
+        message="Are you sure you want to log out?"
+        onConfirm={confirmLogout}
+        onCancel={() => setShowLogoutDialog(false)}
+      />
     </div>
   );
 };
