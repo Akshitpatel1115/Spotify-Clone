@@ -24,16 +24,18 @@ export const PlayerProvider = ({ children }) => {
   const playNext = () => {
     if (!currentSong || queue.length === 0) return;
     const currentIndex = queue.findIndex(s => s._id === currentSong._id);
-    if (currentIndex !== -1 && currentIndex < queue.length - 1) {
-      playSong(queue[currentIndex + 1], queue);
+    if (currentIndex !== -1) {
+      const nextIndex = (currentIndex + 1) % queue.length;
+      playSong(queue[nextIndex], queue);
     }
   };
 
   const playPrevious = () => {
     if (!currentSong || queue.length === 0) return;
     const currentIndex = queue.findIndex(s => s._id === currentSong._id);
-    if (currentIndex > 0) {
-      playSong(queue[currentIndex - 1], queue);
+    if (currentIndex !== -1) {
+      const prevIndex = (currentIndex - 1 + queue.length) % queue.length;
+      playSong(queue[prevIndex], queue);
     }
   };
 

@@ -94,7 +94,12 @@ const MusicCard = ({ song = {}, queue = [], viewMode = "grid", onDelete }) => {
           </div>
         </div>
         <div className="flex flex-col flex-1 overflow-hidden">
-          <h3 className={`truncate text-sm font-semibold ${isCurrentSong ? "text-primary" : "text-white"}`}>{title}</h3>
+          <div className="flex items-center gap-2">
+            <h3 className={`truncate text-sm font-semibold ${isCurrentSong ? "text-primary" : "text-white"}`}>{title}</h3>
+            {isCurrentlyPlaying && (
+              <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-primary animate-pulse shadow-[0_0_8px_rgba(30,215,96,0.8)]"></span>
+            )}
+          </div>
           <p className="truncate text-xs text-text-secondary mt-0.5">{artist}</p>
         </div>
         {isOwner && (
@@ -169,9 +174,14 @@ const MusicCard = ({ song = {}, queue = [], viewMode = "grid", onDelete }) => {
 
       {/* Info */}
       <div className="flex flex-col">
-        <h3 className={`truncate text-base font-semibold ${isCurrentSong ? "text-primary" : "text-white"}`}>
-          {title}
-        </h3>
+        <div className="flex items-center gap-2">
+          <h3 className={`truncate text-base font-semibold ${isCurrentSong ? "text-primary" : "text-white"}`}>
+            {title}
+          </h3>
+          {isCurrentlyPlaying && (
+            <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-primary animate-pulse shadow-[0_0_8px_rgba(30,215,96,0.8)]"></span>
+          )}
+        </div>
         <p className="truncate text-sm text-text-secondary mt-1">
           {artist}
         </p>
