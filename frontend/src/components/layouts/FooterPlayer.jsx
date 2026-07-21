@@ -176,7 +176,7 @@ const FooterPlayer = () => {
               style={{ width: `${progress}%` }}
             ></div>
             <div 
-              className="absolute top-1/2 -mt-1.5 -ml-1.5 h-3 w-3 rounded-full bg-white opacity-0 transition-opacity group-hover:opacity-100 shadow-md"
+              className="absolute top-1/2 -mt-1.5 -ml-1.5 h-3 w-3 rounded-full bg-white shadow-md opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
               style={{ left: `${progress}%` }}
             ></div>
           </div>
@@ -198,7 +198,7 @@ const FooterPlayer = () => {
             style={{ width: `${volume * 100}%` }}
           ></div>
           <div 
-            className="absolute top-1/2 -mt-1.5 -ml-1.5 h-3 w-3 rounded-full bg-white opacity-0 transition-opacity group-hover:opacity-100 shadow-md"
+            className="absolute top-1/2 -mt-1.5 -ml-1.5 h-3 w-3 rounded-full bg-white shadow-md opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
             style={{ left: `${volume * 100}%` }}
           ></div>
         </div>
