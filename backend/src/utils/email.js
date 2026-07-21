@@ -1,4 +1,9 @@
 const nodemailer = require('nodemailer');
+const dns = require('dns');
+
+// Force Node to use IPv4 instead of IPv6. 
+// Fixes ENETUNREACH (IPv6 routing) errors on cloud platforms like Render.
+dns.setDefaultResultOrder('ipv4first');
 
 // Configure the transporter
 const transporter = nodemailer.createTransport({
