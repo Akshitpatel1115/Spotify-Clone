@@ -8,13 +8,13 @@ dns.setDefaultResultOrder('ipv4first');
 // Configure the transporter
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST || 'smtp.gmail.com',
-  port: process.env.SMTP_PORT || 465,
+  port: 465, // Hardcoded to 465 to prevent your Render env var (587) from breaking the secure:true mismatch
   secure: true, // true for 465 (SSL/TLS)
   auth: {
     user: process.env.SMTP_USER, 
     pass: process.env.SMTP_PASS,
   },
-  family: 4, // Force IPv4 directly at the socket level (fixes Render ENETUNREACH issues)
+  family: 4, // Force IPv4 directly at the socket level
   connectionTimeout: 10000, // 10 seconds timeout so it doesn't hang forever
   greetingTimeout: 10000,
   socketTimeout: 10000,
