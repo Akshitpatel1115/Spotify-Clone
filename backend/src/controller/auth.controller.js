@@ -69,7 +69,7 @@ async function register(req, res) {
       otp: hashedOtp,
       otpExpiresAt,
       resendAvailableAt,
-      expiresAt
+      expiresAt,
     });
 
     // Step 8: Send OTP email (with graceful fallback for Render free tier blocks)
@@ -78,6 +78,7 @@ async function register(req, res) {
       await sendOTPEmail(email, otp);
       console.log("[Register] Email sent successfully!");
     } catch (emailError) {
+      console.log(emailError);
       console.error("\n=========================================");
       console.error("⚠️  EMAIL BLOCKED BY HOSTING PROVIDER  ⚠️");
       console.error("Render free tier blocks SMTP ports (465/587).");
@@ -90,10 +91,11 @@ async function register(req, res) {
     return res.status(201).json({
       message: "Registration step 1 complete. OTP sent to your email.",
     });
-
   } catch (error) {
     console.error("[Register] Error:", error);
-    return res.status(500).json({ message: "Internal server error during registration." });
+    return res
+      .status(500)
+      .json({ message: "Internal server error during registration." });
   }
 }
 
@@ -156,7 +158,8 @@ async function verifyEmail(req, res) {
 
     if (!pendingUser) {
       return res.status(404).json({
-        message: "No pending registration found for this email. It may have expired.",
+        message:
+          "No pending registration found for this email. It may have expired.",
       });
     }
 
@@ -206,10 +209,11 @@ async function verifyEmail(req, res) {
       success: true,
       message: "Email verified successfully. Please login to continue.",
     });
-
   } catch (error) {
     console.error("Verification Error:", error);
-    return res.status(500).json({ message: "Internal server error during verification." });
+    return res
+      .status(500)
+      .json({ message: "Internal server error during verification." });
   }
 }
 
