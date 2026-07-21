@@ -14,6 +14,7 @@ const transporter = nodemailer.createTransport({
     user: process.env.SMTP_USER, 
     pass: process.env.SMTP_PASS,
   },
+  family: 4, // Force IPv4 directly at the socket level (fixes Render ENETUNREACH issues)
 });
 
 /**
