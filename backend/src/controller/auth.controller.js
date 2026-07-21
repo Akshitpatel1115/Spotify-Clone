@@ -3,7 +3,7 @@ const PendingUser = require("../models/pendingUser.model");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const crypto = require("crypto");
-const { sendOTPEmail } = require("../utils/email");
+const { sendOTPEmail } = require("../services/email.service");
 
 const cookieOptions = {
   httpOnly: true,
@@ -72,16 +72,15 @@ async function register(req, res) {
       expiresAt,
     });
 
-    // Step 8: Send OTP email (with graceful fallback for Render free tier blocks)
-    console.log("[Register] Handing off to Nodemailer...");
+    // Step 8: Send OTP email via Resend
+    console.log("[Register] Handing off to Resend Email Service...");
     try {
       await sendOTPEmail(email, otp);
       console.log("[Register] Email sent successfully!");
     } catch (emailError) {
-      console.log(emailError);
       console.error("\n=========================================");
-      console.error("⚠️  EMAIL BLOCKED BY HOSTING PROVIDER  ⚠️");
-      console.error("Render free tier blocks SMTP ports (465/587).");
+      console.error("⚠️  EMAIL DELIVERY FAILED  ⚠️");
+      console.error("Please verify your RESEND_API_KEY and EMAIL_FROM in .env.");
       console.error("For testing purposes, your OTP is: ", otp);
       console.error("=========================================\n");
       // We do NOT throw here. We allow the registration to proceed so you can test the frontend UI using the OTP printed above!
