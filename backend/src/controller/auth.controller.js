@@ -72,10 +72,19 @@ async function register(req, res) {
       expiresAt
     });
 
-    // Step 8: Send OTP email
+    // Step 8: Send OTP email (with graceful fallback for Render free tier blocks)
     console.log("[Register] Handing off to Nodemailer...");
-    await sendOTPEmail(email, otp);
-    console.log("[Register] Email sent successfully!");
+    try {
+      await sendOTPEmail(email, otp);
+      console.log("[Register] Email sent successfully!");
+    } catch (emailError) {
+      console.error("\n=========================================");
+      console.error("⚠️  EMAIL BLOCKED BY HOSTING PROVIDER  ⚠️");
+      console.error("Render free tier blocks SMTP ports (465/587).");
+      console.error("For testing purposes, your OTP is: ", otp);
+      console.error("=========================================\n");
+      // We do NOT throw here. We allow the registration to proceed so you can test the frontend UI using the OTP printed above!
+    }
 
     // Step 9: Return success response
     return res.status(201).json({
