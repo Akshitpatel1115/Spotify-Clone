@@ -56,6 +56,45 @@ const sendOTPEmail = async (to, otp) => {
   }
     };
 
+/**
+ * Sends a password reset OTP email to the specified address.
+ */
+const sendPasswordResetEmail = async (to, otp) => {
+  if (!process.env.RESEND_API_KEY || !process.env.EMAIL_FROM) {
+    throw new Error('Email service is not properly configured.');
+  }
+
+  const htmlContent = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px;">
+      <h2 style="color: #1ed760; text-align: center;">Reset Your Password</h2>
+      <p style="font-size: 16px; color: #333;">We received a request to reset the password for your Spotify Clone account. Please use the verification code below to reset it:</p>
+      <div style="text-align: center; margin: 30px 0;">
+        <span style="display: inline-block; padding: 15px 30px; font-size: 32px; font-weight: bold; letter-spacing: 5px; color: #fff; background-color: #121212; border-radius: 8px;">
+          ${otp}
+        </span>
+      </div>
+      <p style="font-size: 14px; color: #555;">This code will expire in <strong>10 minutes</strong>. Do not share this code with anyone.</p>
+      <p style="font-size: 14px; color: #555; margin-top: 30px;">If you didn't request a password reset, you can safely ignore this email.</p>
+    </div>
+  `;
+
+  try {
+    const { data, error } = await resend.emails.send({
+      from: `Spotify Clone <${process.env.EMAIL_FROM}>`,
+      to: to,
+      subject: 'Password Reset Verification Code',
+      html: htmlContent,
+    });
+
+    if (error) throw new Error(error.message);
+    return data;
+  } catch (error) {
+    console.error('[Email Service] Unexpected error:', error.message);
+    throw new Error('Could not send OTP email. Please try again later.');
+  }
+};
+
 module.exports = {
   sendOTPEmail,
+  sendPasswordResetEmail,
 };

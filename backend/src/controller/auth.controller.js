@@ -3,7 +3,7 @@ const PendingUser = require("../models/pendingUser.model");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const crypto = require("crypto");
-const { sendOTPEmail } = require("../services/email.service");
+const { sendOTPEmail, sendPasswordResetEmail } = require("../services/email.service");
 
 const cookieOptions = {
   httpOnly: true,
@@ -414,7 +414,7 @@ async function forgotPassword(req, res) {
     await user.save();
 
     try {
-      await sendOTPEmail(email, otp);
+      await sendPasswordResetEmail(email, otp);
     } catch (emailError) {
       console.error("\n=========================================");
       console.error("⚠️  EMAIL DELIVERY FAILED  ⚠️");

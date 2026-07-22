@@ -275,7 +275,7 @@ const RegisterForm = () => {
           {/* Smooth slide down for the strength meter */}
           <div
             className={`mt-2 transition-all duration-300 overflow-hidden ${
-              isPasswordFocused || formData.password.length > 0
+              isPasswordFocused || (formData.password.length > 0 && !isPasswordValid())
                 ? "max-h-[300px] opacity-100"
                 : "max-h-0 opacity-0"
             }`}
@@ -298,11 +298,6 @@ const RegisterForm = () => {
           {formData.confirmPassword.length > 0 && !passwordsMatch && (
             <p className="mt-1 text-sm text-red-500 transition-opacity duration-300">
               Passwords do not match.
-            </p>
-          )}
-          {formData.confirmPassword.length > 0 && passwordsMatch && (
-            <p className="mt-1 text-sm text-green-500 transition-opacity duration-300">
-              Passwords match.
             </p>
           )}
         </div>

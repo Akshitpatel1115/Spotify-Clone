@@ -1,6 +1,6 @@
 const AuthLayout = ({ children }) => {
   return (
-    <div className="relative flex h-screen w-full flex-col items-center justify-center bg-[#121212] px-4 overflow-hidden">
+    <div className="relative flex min-h-screen w-full flex-col items-center justify-center bg-[#121212] px-4 py-12">
       
       {/* Fixed background to prevent scrolling overflow issues */}
       <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
