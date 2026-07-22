@@ -40,6 +40,10 @@ const userSchema = new mongoose.Schema({
   lockUntil: {
     type: Date,
     default: null,
+  },
+  resetPasswordOtpAttempts: {
+    type: Number,
+    default: 0,
   }
 });
 

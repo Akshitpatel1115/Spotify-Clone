@@ -22,6 +22,10 @@ const pendingUserSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  otpAttempts: {
+    type: Number,
+    default: 0,
+  },
   otpExpiresAt: {
     type: Date,
     required: true,

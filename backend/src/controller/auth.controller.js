@@ -136,6 +136,7 @@ async function resendOtp(req, res) {
     pendingUser.otpExpiresAt = new Date(now + 10 * 60 * 1000);
     pendingUser.resendAvailableAt = new Date(now + 2 * 60 * 1000);
     pendingUser.expiresAt = new Date(now + 30 * 60 * 1000);
+    pendingUser.otpAttempts = 0; // Reset attempts on new OTP
 
     await pendingUser.save();
 
@@ -272,15 +273,35 @@ async function verifyEmail(req, res) {
       });
     }
 
-    // Step 5: Compare OTP using bcrypt
-    const isOtpValid = await bcrypt.compare(otp, pendingUser.otp);
-
-    // Step 6: If OTP is incorrect
-    if (!isOtpValid) {
-      return res.status(401).json({ message: "Invalid OTP." });
+    // Step 5: Check Attempt Limit Before Compare
+    const MAX_ATTEMPTS = parseInt(process.env.OTP_MAX_ATTEMPTS) || 5;
+    if (pendingUser.otpAttempts >= MAX_ATTEMPTS) {
+      return res.status(400).json({
+        message: "Maximum verification attempts reached. Please request a new verification code.",
+      });
     }
 
-    // Step 7: Create Real User
+    // Step 6: Compare OTP using bcrypt
+    const isOtpValid = await bcrypt.compare(otp, pendingUser.otp);
+
+    // Step 7: If OTP is incorrect
+    if (!isOtpValid) {
+      pendingUser.otpAttempts += 1;
+      
+      if (pendingUser.otpAttempts >= MAX_ATTEMPTS) {
+        // Invalidate OTP by expiring it immediately
+        pendingUser.otpExpiresAt = new Date(Date.now() - 1000);
+        await pendingUser.save();
+        return res.status(400).json({
+          message: "Maximum verification attempts reached. Please request a new verification code.",
+        });
+      }
+      
+      await pendingUser.save();
+      return res.status(401).json({ message: "Invalid verification code." });
+    }
+
+    // Step 8: Create Real User
     // Double check that the real user wasn't somehow created already
     const existingUser = await userModel.findOne({ email });
     if (existingUser) {
@@ -345,6 +366,7 @@ async function forgotPassword(req, res) {
     user.resetPasswordOTPExpiresAt = new Date(now + 10 * 60 * 1000);
     user.resetPasswordResendAvailableAt = new Date(now + 2 * 60 * 1000);
     user.resetPasswordVerified = false;
+    user.resetPasswordOtpAttempts = 0; // Reset attempts on new OTP
 
     await user.save();
 
@@ -391,14 +413,34 @@ async function verifyResetOtp(req, res) {
       });
     }
 
+    const MAX_ATTEMPTS = parseInt(process.env.OTP_MAX_ATTEMPTS) || 5;
+    if (user.resetPasswordOtpAttempts >= MAX_ATTEMPTS) {
+      return res.status(400).json({
+        message: "Maximum verification attempts reached. Please request a new verification code.",
+      });
+    }
+
     const isOtpValid = await bcrypt.compare(otp, user.resetPasswordOTP);
 
     if (!isOtpValid) {
-      return res.status(401).json({ message: "Invalid OTP." });
+      user.resetPasswordOtpAttempts += 1;
+      
+      if (user.resetPasswordOtpAttempts >= MAX_ATTEMPTS) {
+        // Invalidate OTP by expiring it immediately
+        user.resetPasswordOTPExpiresAt = new Date(Date.now() - 1000);
+        await user.save();
+        return res.status(400).json({
+          message: "Maximum verification attempts reached. Please request a new verification code.",
+        });
+      }
+      
+      await user.save();
+      return res.status(401).json({ message: "Invalid verification code." });
     }
 
     // OTP verified, unlock password reset step
     user.resetPasswordVerified = true;
+    user.resetPasswordOtpAttempts = 0;
     await user.save();
 
     return res.status(200).json({
