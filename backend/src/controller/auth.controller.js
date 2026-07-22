@@ -14,49 +14,54 @@ const cookieOptions = {
 
 async function register(req, res) {
   try {
-    console.log("[Register] API hit");
     const { username, email, password, role = "user" } = req.body;
 
     // Step 1: Validate
     if (!username || !email || !password) {
-      return res.status(400).json({ message: "All fields are required" });
+      return res.status(400).json({ success: false, message: "All fields are required" });
+    }
+
+    if (username.trim() === "" || email.trim() === "" || password.trim() === "") {
+      return res.status(400).json({ success: false, message: "Fields cannot be empty" });
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({ success: false, message: "Invalid email format" });
     }
 
     // Step 2: Check Users Collection
-    console.log("[Register] Checking Users collection...");
     const isUserAlreadyExist = await userModel.findOne({
       $or: [{ username }, { email }],
     });
 
     if (isUserAlreadyExist) {
       return res.status(409).json({
+        success: false,
         message: "User already exists. Please log in.",
       });
     }
 
     // Step 3: Check PendingUsers Collection
-    console.log("[Register] Checking PendingUsers collection...");
     const isUserPending = await PendingUser.findOne({ email });
 
     if (isUserPending) {
       return res.status(409).json({
+        success: false,
         message: "Registration is pending. Please verify your OTP to continue.",
       });
     }
 
     // Step 4: Hash Password
-    console.log("[Register] Hashing password...");
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // Step 5: Generate secure 6-digit OTP
     const otp = crypto.randomInt(100000, 999999).toString();
 
     // Step 6: Hash OTP
-    console.log("[Register] Hashing OTP...");
     const hashedOtp = await bcrypt.hash(otp, 10);
 
     // Step 7: Store inside PendingUsers
-    console.log("[Register] Saving to PendingUsers DB...");
     const otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000);
     const resendAvailableAt = new Date(Date.now() + 2 * 60 * 1000);
     const expiresAt = new Date(Date.now() + 30 * 60 * 1000);
@@ -73,10 +78,8 @@ async function register(req, res) {
     });
 
     // Step 8: Send OTP email via Resend
-    console.log("[Register] Handing off to Resend Email Service...");
     try {
       await sendOTPEmail(email, otp);
-      console.log("[Register] Email sent successfully!");
     } catch (emailError) {
       console.error("\n=========================================");
       console.error("⚠️  EMAIL DELIVERY FAILED  ⚠️");
@@ -88,13 +91,14 @@ async function register(req, res) {
 
     // Step 9: Return success response
     return res.status(201).json({
+      success: true,
       message: "Registration step 1 complete. OTP sent to your email.",
     });
   } catch (error) {
     console.error("[Register] Error:", error);
     return res
       .status(500)
-      .json({ message: "Internal server error during registration." });
+      .json({ success: false, message: "Internal server error during registration." });
   }
 }
 
@@ -103,13 +107,19 @@ async function resendOtp(req, res) {
     const { email } = req.body;
 
     if (!email) {
-      return res.status(400).json({ message: "Email is required." });
+      return res.status(400).json({ success: false, message: "Email is required." });
+    }
+    
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({ success: false, message: "Invalid email format" });
     }
 
     const pendingUser = await PendingUser.findOne({ email });
 
     if (!pendingUser) {
       return res.status(404).json({
+        success: false,
         message: "No pending registration found for this email.",
       });
     }
@@ -117,6 +127,7 @@ async function resendOtp(req, res) {
     if (pendingUser.expiresAt < new Date()) {
       await PendingUser.deleteOne({ _id: pendingUser._id });
       return res.status(400).json({
+        success: false,
         message: "Registration window has expired. Please register again.",
       });
     }
@@ -140,10 +151,8 @@ async function resendOtp(req, res) {
 
     await pendingUser.save();
 
-    console.log("[Resend OTP] Handing off to Resend Email Service...");
     try {
       await sendOTPEmail(email, otp);
-      console.log("[Resend OTP] Email sent successfully!");
     } catch (emailError) {
       console.log(emailError)
       console.error("⚠️  EMAIL DELIVERY FAILED  ⚠️");
@@ -155,13 +164,20 @@ async function resendOtp(req, res) {
     });
   } catch (error) {
     console.error("[Resend OTP] Error:", error);
-    return res.status(500).json({ message: "Internal server error while resending OTP." });
+    return res.status(500).json({ success: false, message: "Internal server error while resending OTP." });
   }
 }
 
 async function login(req, res) {
   try {
     const { username, email, password } = req.body;
+
+    if (!username && !email) {
+      return res.status(400).json({ success: false, message: "Email or username is required." });
+    }
+    if (!password) {
+      return res.status(400).json({ success: false, message: "Password is required." });
+    }
 
     // Step 1: Find User
     const user = await userModel.findOne({
@@ -170,6 +186,7 @@ async function login(req, res) {
 
     if (!user) {
       return res.status(401).json({
+        success: false,
         message: "Invalid email or password.",
       });
     }
@@ -202,6 +219,7 @@ async function login(req, res) {
       await user.save();
 
       return res.status(401).json({
+        success: false,
         message: "Invalid email or password.",
       });
     }
@@ -223,21 +241,32 @@ async function login(req, res) {
 
     res.cookie("token", token, cookieOptions);
 
+    // Sanitize user data (Remove password, authBlock, etc.)
+    const userResponse = user.toObject();
+    delete userResponse.password;
+    delete userResponse.authBlock;
+    delete userResponse.resetPasswordOTP;
+    delete userResponse.loginAttempts;
+
     return res.status(200).json({
+      success: true,
       message: "Login successful",
-      user: user,
-      token: token,
+      data: {
+        user: userResponse,
+        token: token,
+      }
     });
   } catch (error) {
     console.error("[Login] Error:", error);
-    return res.status(500).json({ message: "Internal server error during login." });
+    return res.status(500).json({ success: false, message: "Internal server error during login." });
   }
 }
 
 async function logout(req, res) {
   res.clearCookie("token", cookieOptions);
   res.status(200).json({
-    message: "Logout successfuly.",
+    success: true,
+    message: "Logout successfully.",
   });
 }
 
@@ -247,12 +276,12 @@ async function verifyEmail(req, res) {
 
     // Step 1: Validate
     if (!email || !otp) {
-      return res.status(400).json({ message: "Email and OTP are required" });
+      return res.status(400).json({ success: false, message: "Email and OTP are required" });
     }
 
     const otpRegex = /^\d{6}$/;
     if (!otpRegex.test(otp)) {
-      return res.status(400).json({ message: "Invalid OTP format." });
+      return res.status(400).json({ success: false, message: "Invalid OTP format." });
     }
 
     // Step 2: Find Pending User
@@ -260,6 +289,7 @@ async function verifyEmail(req, res) {
 
     if (!pendingUser) {
       return res.status(404).json({
+        success: false,
         message:
           "No pending registration found for this email. It may have expired.",
       });
@@ -269,6 +299,7 @@ async function verifyEmail(req, res) {
     if (pendingUser.expiresAt < new Date()) {
       await PendingUser.deleteOne({ _id: pendingUser._id });
       return res.status(400).json({
+        success: false,
         message: "Registration window has expired. Please register again.",
       });
     }
@@ -276,6 +307,7 @@ async function verifyEmail(req, res) {
     // Step 4: Check OTP Expired
     if (pendingUser.otpExpiresAt < new Date()) {
       return res.status(400).json({
+        success: false,
         message: "OTP has expired. Please request a new one.",
       });
     }
@@ -304,7 +336,7 @@ async function verifyEmail(req, res) {
       }
       
       await pendingUser.save();
-      return res.status(401).json({ message: "Invalid verification code." });
+      return res.status(401).json({ success: false, message: "Invalid verification code." });
     }
 
     // Step 8: Create Real User
@@ -312,7 +344,7 @@ async function verifyEmail(req, res) {
     const existingUser = await userModel.findOne({ email });
     if (existingUser) {
       await PendingUser.deleteOne({ _id: pendingUser._id });
-      return res.status(409).json({ message: "User already exists." });
+      return res.status(409).json({ success: false, message: "User already exists." });
     }
 
     const newUser = await userModel.create({
@@ -334,7 +366,7 @@ async function verifyEmail(req, res) {
     console.error("Verification Error:", error);
     return res
       .status(500)
-      .json({ message: "Internal server error during verification." });
+      .json({ success: false, message: "Internal server error during verification." });
   }
 }
 
@@ -343,7 +375,12 @@ async function forgotPassword(req, res) {
     const { email } = req.body;
 
     if (!email) {
-      return res.status(400).json({ message: "Email is required." });
+      return res.status(400).json({ success: false, message: "Email is required." });
+    }
+    
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({ success: false, message: "Invalid email format" });
     }
 
     const user = await userModel.findOne({ email });
@@ -376,10 +413,8 @@ async function forgotPassword(req, res) {
 
     await user.save();
 
-    console.log("[Forgot Password] Handing off to Resend Email Service...");
     try {
       await sendOTPEmail(email, otp);
-      console.log("[Forgot Password] Email sent successfully!");
     } catch (emailError) {
       console.error("\n=========================================");
       console.error("⚠️  EMAIL DELIVERY FAILED  ⚠️");
@@ -393,7 +428,7 @@ async function forgotPassword(req, res) {
     });
   } catch (error) {
     console.error("[Forgot Password] Error:", error);
-    return res.status(500).json({ message: "Internal server error." });
+    return res.status(500).json({ success: false, message: "Internal server error." });
   }
 }
 
@@ -402,24 +437,26 @@ async function verifyResetOtp(req, res) {
     const { email, otp } = req.body;
 
     if (!email || !otp) {
-      return res.status(400).json({ message: "Email and OTP are required." });
+      return res.status(400).json({ success: false, message: "Email and OTP are required." });
     }
 
     const otpRegex = /^\d{6}$/;
     if (!otpRegex.test(otp)) {
-      return res.status(400).json({ message: "Invalid OTP format." });
+      return res.status(400).json({ success: false, message: "Invalid OTP format." });
     }
 
     const user = await userModel.findOne({ email });
 
     if (!user || !user.resetPasswordOTP) {
       return res.status(404).json({
+        success: false,
         message: "No pending password reset found for this email.",
       });
     }
 
     if (user.resetPasswordOTPExpiresAt < new Date()) {
       return res.status(400).json({
+        success: false,
         message: "OTP has expired. Please request a new one.",
       });
     }
@@ -446,7 +483,7 @@ async function verifyResetOtp(req, res) {
       }
       
       await user.save();
-      return res.status(401).json({ message: "Invalid verification code." });
+      return res.status(401).json({ success: false, message: "Invalid verification code." });
     }
 
     // OTP verified, unlock password reset step
@@ -460,7 +497,7 @@ async function verifyResetOtp(req, res) {
     });
   } catch (error) {
     console.error("[Verify Reset OTP] Error:", error);
-    return res.status(500).json({ message: "Internal server error." });
+    return res.status(500).json({ success: false, message: "Internal server error." });
   }
 }
 
@@ -469,27 +506,28 @@ async function resetPassword(req, res) {
     const { email, newPassword } = req.body;
 
     if (!email || !newPassword) {
-      return res.status(400).json({ message: "Email and new password are required." });
+      return res.status(400).json({ success: false, message: "Email and new password are required." });
     }
 
     if (newPassword.length < 6) {
-      return res.status(400).json({ message: "Password must be at least 6 characters long." });
+      return res.status(400).json({ success: false, message: "Password must be at least 6 characters long." });
     }
 
     const user = await userModel.findOne({ email });
 
     if (!user) {
-      return res.status(404).json({ message: "User not found." });
+      return res.status(404).json({ success: false, message: "User not found." });
     }
 
     // Security check: Must have successfully verified OTP
     if (user.resetPasswordVerified !== true) {
-      return res.status(403).json({ message: "Forbidden. Please verify OTP first." });
+      return res.status(403).json({ success: false, message: "Forbidden. Please verify OTP first." });
     }
 
     // Security check: Must be within the 10-minute expiry window
     if (user.resetPasswordOTPExpiresAt < new Date()) {
       return res.status(400).json({
+        success: false,
         message: "Password reset window has expired. Please request a new OTP.",
       });
     }
@@ -510,7 +548,7 @@ async function resetPassword(req, res) {
     });
   } catch (error) {
     console.error("[Reset Password] Error:", error);
-    return res.status(500).json({ message: "Internal server error." });
+    return res.status(500).json({ success: false, message: "Internal server error." });
   }
 }
 
