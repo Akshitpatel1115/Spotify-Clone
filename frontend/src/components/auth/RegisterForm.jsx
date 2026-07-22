@@ -5,6 +5,7 @@ import { FiUser, FiMail, FiLock } from "react-icons/fi";
 import Input from "../common/Input";
 import Button from "../common/Button";
 import RoleSelector from "./RoleSelector";
+import PasswordStrengthMeter from "./PasswordStrengthMeter";
 import api from "../../api/axios";
 import { useToast } from "../../context/ToastContext";
 
@@ -13,8 +14,10 @@ const RegisterForm = () => {
     username: "",
     email: "",
     password: "",
+    confirmPassword: "",
     role: "user",
   });
+  const [isPasswordFocused, setIsPasswordFocused] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isOtpStep, setIsOtpStep] = useState(false);
   const [otp, setOtp] = useState("");
@@ -61,6 +64,19 @@ const RegisterForm = () => {
     return `${m}:${s < 10 ? '0' : ''}${s}`;
   };
 
+  const isPasswordValid = () => {
+    const p = formData.password;
+    return (
+      p.length >= 8 &&
+      /[A-Z]/.test(p) &&
+      /[a-z]/.test(p) &&
+      /[0-9]/.test(p) &&
+      /[^A-Za-z0-9]/.test(p)
+    );
+  };
+
+  const passwordsMatch = formData.password === formData.confirmPassword;
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     console.log("Register button clicked. Validating form data...");
@@ -78,9 +94,13 @@ const RegisterForm = () => {
       return;
     }
 
-    if (formData.password.length < 6) {
-      console.log("Validation failed: Password too short.");
-      toast.error("Password must be at least 6 characters long.");
+    if (!isPasswordValid()) {
+      toast.error("Password does not meet all requirements.");
+      return;
+    }
+
+    if (!passwordsMatch) {
+      toast.error("Passwords do not match.");
       return;
     }
 
@@ -239,23 +259,69 @@ const RegisterForm = () => {
           required
         />
 
-        <Input
-          label="Password"
-          type="password"
-          name="password"
-          placeholder="Enter your password"
-          value={formData.password}
-          onChange={handleChange}
-          icon={FiLock}
-          required
-        />
+        <div className="relative">
+          <Input
+            label="Password"
+            type="password"
+            name="password"
+            placeholder="Enter your password"
+            value={formData.password}
+            onChange={handleChange}
+            onFocus={() => setIsPasswordFocused(true)}
+            onBlur={() => setIsPasswordFocused(false)}
+            icon={FiLock}
+            required
+          />
+          {/* Smooth slide down for the strength meter */}
+          <div
+            className={`mt-2 transition-all duration-300 overflow-hidden ${
+              isPasswordFocused || formData.password.length > 0
+                ? "max-h-[300px] opacity-100"
+                : "max-h-0 opacity-0"
+            }`}
+          >
+            <PasswordStrengthMeter password={formData.password} />
+          </div>
+        </div>
+
+        <div>
+          <Input
+            label="Confirm Password"
+            type="password"
+            name="confirmPassword"
+            placeholder="Confirm your password"
+            value={formData.confirmPassword}
+            onChange={handleChange}
+            icon={FiLock}
+            required
+          />
+          {formData.confirmPassword.length > 0 && !passwordsMatch && (
+            <p className="mt-1 text-sm text-red-500 transition-opacity duration-300">
+              Passwords do not match.
+            </p>
+          )}
+          {formData.confirmPassword.length > 0 && passwordsMatch && (
+            <p className="mt-1 text-sm text-green-500 transition-opacity duration-300">
+              Passwords match.
+            </p>
+          )}
+        </div>
 
         <RoleSelector
           value={formData.role}
           onChange={handleRoleChange}
         />
 
-        <Button type="submit" disabled={isLoading}>
+        <Button 
+          type="submit" 
+          disabled={
+            isLoading || 
+            !isPasswordValid() || 
+            !passwordsMatch || 
+            !formData.username || 
+            !formData.email
+          }
+        >
           {isLoading ? "Sending OTP..." : "Create Account"}
         </Button>
       </form>
