@@ -1,5 +1,5 @@
 import { NavLink } from "react-router-dom";
-import logoImg from "../../assets/sonexa-logo.jpeg";
+import logoImg from "../../assets/sonexa-logo.png";
 import {
   FiHome,
   FiDisc,

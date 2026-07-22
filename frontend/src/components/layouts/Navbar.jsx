@@ -4,7 +4,7 @@ import useAuth from "../../context/useAuth";
 import api from "../../api/axios";
 import { FiLogOut } from "react-icons/fi";
 import ConfirmDialog from "../common/ConfirmDialog";
-import logoImg from "../../assets/sonexa-logo.jpeg";
+import logoImg from "../../assets/sonexa-logo.png";
 
 const Navbar = () => {
   const { signOut, user } = useAuth();
