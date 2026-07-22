@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { FiUser, FiMail, FiLock } from "react-icons/fi";
 
@@ -18,6 +18,7 @@ const RegisterForm = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isOtpStep, setIsOtpStep] = useState(false);
   const [otp, setOtp] = useState("");
+  const [timer, setTimer] = useState(135); // 2 minutes 15 seconds
   const navigate = useNavigate();
   const toast = useToast();
 
@@ -33,6 +34,22 @@ const RegisterForm = () => {
       ...prev,
       role,
     }));
+  };
+
+  useEffect(() => {
+    let interval;
+    if (isOtpStep && timer > 0) {
+      interval = setInterval(() => {
+        setTimer((prev) => prev - 1);
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [isOtpStep, timer]);
+
+  const formatTime = (seconds) => {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${m}:${s < 10 ? '0' : ''}${s}`;
   };
 
   const handleSubmit = async (e) => {
@@ -101,6 +118,20 @@ const RegisterForm = () => {
     }
   };
 
+  const handleResendOtp = async () => {
+    try {
+      setIsLoading(true);
+      await api.post("/auth/resend-otp", { email: formData.email });
+      toast.success("A new verification code has been sent.");
+      setTimer(135); // Reset timer
+    } catch (error) {
+      console.error("Resend OTP failed:", error);
+      toast.error(error.response?.data?.message || "Failed to resend OTP");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   if (isOtpStep) {
     return (
       <div className="w-full max-w-lg rounded-3xl border border-border bg-surface p-5 shadow-2xl">
@@ -126,6 +157,17 @@ const RegisterForm = () => {
             {isLoading ? "Verifying..." : "Verify OTP"}
           </Button>
         </form>
+
+        <div className="mt-4 text-center">
+          <button
+            type="button"
+            disabled={timer > 0 || isLoading}
+            onClick={handleResendOtp}
+            className="text-sm font-semibold text-primary transition hover:text-primary-hover disabled:text-gray-500 disabled:cursor-not-allowed"
+          >
+            {timer > 0 ? `Resend OTP in ${formatTime(timer)}` : "Resend OTP"}
+          </button>
+        </div>
       </div>
     );
   }

@@ -144,10 +144,8 @@ async function resendOtp(req, res) {
       await sendOTPEmail(email, otp);
       console.log("[Resend OTP] Email sent successfully!");
     } catch (emailError) {
-      console.error("\n=========================================");
+      console.log(emailError)
       console.error("⚠️  EMAIL DELIVERY FAILED  ⚠️");
-      console.error("For testing purposes, your OTP is: ", otp);
-      console.error("=========================================\n");
     }
 
     return res.status(200).json({
