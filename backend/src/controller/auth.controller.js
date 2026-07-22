@@ -276,4 +276,154 @@ async function verifyEmail(req, res) {
   }
 }
 
-module.exports = { register, resendOtp, verifyEmail, login, logout };
+async function forgotPassword(req, res) {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ message: "Email is required." });
+    }
+
+    const user = await userModel.findOne({ email });
+
+    // For security, always return success even if user doesn't exist to prevent email enumeration
+    if (!user) {
+      return res.status(200).json({
+        success: true,
+        message: "If an account exists, a verification code has been sent.",
+      });
+    }
+
+    // Check cooldown
+    if (user.resetPasswordResendAvailableAt > new Date()) {
+      return res.status(429).json({
+        success: false,
+        message: "Please wait before requesting another OTP.",
+      });
+    }
+
+    const otp = crypto.randomInt(100000, 999999).toString();
+    const hashedOtp = await bcrypt.hash(otp, 10);
+
+    const now = Date.now();
+    user.resetPasswordOTP = hashedOtp;
+    user.resetPasswordOTPExpiresAt = new Date(now + 10 * 60 * 1000);
+    user.resetPasswordResendAvailableAt = new Date(now + 2 * 60 * 1000);
+    user.resetPasswordVerified = false;
+
+    await user.save();
+
+    console.log("[Forgot Password] Handing off to Resend Email Service...");
+    try {
+      await sendOTPEmail(email, otp);
+      console.log("[Forgot Password] Email sent successfully!");
+    } catch (emailError) {
+      console.error("\n=========================================");
+      console.error("⚠️  EMAIL DELIVERY FAILED  ⚠️");
+      console.error("For testing purposes, your OTP is: ", otp);
+      console.error("=========================================\n");
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "If an account exists, a verification code has been sent.",
+    });
+  } catch (error) {
+    console.error("[Forgot Password] Error:", error);
+    return res.status(500).json({ message: "Internal server error." });
+  }
+}
+
+async function verifyResetOtp(req, res) {
+  try {
+    const { email, otp } = req.body;
+
+    if (!email || !otp) {
+      return res.status(400).json({ message: "Email and OTP are required." });
+    }
+
+    const user = await userModel.findOne({ email });
+
+    if (!user || !user.resetPasswordOTP) {
+      return res.status(404).json({
+        message: "No pending password reset found for this email.",
+      });
+    }
+
+    if (user.resetPasswordOTPExpiresAt < new Date()) {
+      return res.status(400).json({
+        message: "OTP has expired. Please request a new one.",
+      });
+    }
+
+    const isOtpValid = await bcrypt.compare(otp, user.resetPasswordOTP);
+
+    if (!isOtpValid) {
+      return res.status(401).json({ message: "Invalid OTP." });
+    }
+
+    // OTP verified, unlock password reset step
+    user.resetPasswordVerified = true;
+    await user.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "OTP verified successfully. You may now reset your password.",
+    });
+  } catch (error) {
+    console.error("[Verify Reset OTP] Error:", error);
+    return res.status(500).json({ message: "Internal server error." });
+  }
+}
+
+async function resetPassword(req, res) {
+  try {
+    const { email, newPassword } = req.body;
+
+    if (!email || !newPassword) {
+      return res.status(400).json({ message: "Email and new password are required." });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({ message: "Password must be at least 6 characters long." });
+    }
+
+    const user = await userModel.findOne({ email });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
+    // Security check: Must have successfully verified OTP
+    if (user.resetPasswordVerified !== true) {
+      return res.status(403).json({ message: "Forbidden. Please verify OTP first." });
+    }
+
+    // Security check: Must be within the 10-minute expiry window
+    if (user.resetPasswordOTPExpiresAt < new Date()) {
+      return res.status(400).json({
+        message: "Password reset window has expired. Please request a new OTP.",
+      });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    user.password = hashedPassword;
+    user.resetPasswordOTP = undefined;
+    user.resetPasswordOTPExpiresAt = undefined;
+    user.resetPasswordResendAvailableAt = undefined;
+    user.resetPasswordVerified = undefined;
+
+    await user.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Password reset successful. Please login using your new password.",
+    });
+  } catch (error) {
+    console.error("[Reset Password] Error:", error);
+    return res.status(500).json({ message: "Internal server error." });
+  }
+}
+
+module.exports = { register, resendOtp, verifyEmail, login, logout, forgotPassword, verifyResetOtp, resetPassword };

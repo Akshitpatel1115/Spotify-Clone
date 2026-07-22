@@ -20,6 +20,19 @@ const userSchema = new mongoose.Schema({
     enum: ["user", "artist"],
     default: "user",
   },
+  resetPasswordOTP: {
+    type: String,
+  },
+  resetPasswordOTPExpiresAt: {
+    type: Date,
+  },
+  resetPasswordResendAvailableAt: {
+    type: Date,
+  },
+  resetPasswordVerified: {
+    type: Boolean,
+    default: false,
+  }
 });
 
 const userModel = new mongoose.model("user", userSchema);
