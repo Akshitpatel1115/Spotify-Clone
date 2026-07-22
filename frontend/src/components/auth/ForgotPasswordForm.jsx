@@ -31,7 +31,7 @@ const ForgotPasswordForm = () => {
   const formatTime = (seconds) => {
     const m = Math.floor(seconds / 60);
     const s = seconds % 60;
-    return \`\${m}:\${s < 10 ? "0" : ""}\${s}\`;
+    return `${m}:${s < 10 ? "0" : ""}${s}`;
   };
 
   const handleRequestOtp = async (e) => {
@@ -102,7 +102,7 @@ const ForgotPasswordForm = () => {
         <h1 className="text-3xl font-bold text-white">Reset Password</h1>
         <p className="mt-2 text-text-secondary">
           {step === 1 && "Enter your email to receive a verification code."}
-          {step === 2 && \`We've sent a 6-digit code to \${email}.\`}
+          {step === 2 && `We've sent a 6-digit code to ${email}.`}
           {step === 3 && "Enter your new password below."}
         </p>
       </div>
@@ -149,7 +149,7 @@ const ForgotPasswordForm = () => {
               onClick={handleRequestOtp}
               className="text-sm font-semibold text-primary transition hover:text-primary-hover disabled:cursor-not-allowed disabled:text-gray-500"
             >
-              {timer > 0 ? \`Resend OTP in \${formatTime(timer)}\` : "Resend OTP"}
+              {timer > 0 ? `Resend OTP in ${formatTime(timer)}` : "Resend OTP"}
             </button>
             <button
               type="button"
