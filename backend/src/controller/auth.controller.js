@@ -248,6 +248,11 @@ async function verifyEmail(req, res) {
       return res.status(400).json({ message: "Email and OTP are required" });
     }
 
+    const otpRegex = /^\d{6}$/;
+    if (!otpRegex.test(otp)) {
+      return res.status(400).json({ message: "Invalid OTP format." });
+    }
+
     // Step 2: Find Pending User
     const pendingUser = await PendingUser.findOne({ email });
 
@@ -397,6 +402,11 @@ async function verifyResetOtp(req, res) {
 
     if (!email || !otp) {
       return res.status(400).json({ message: "Email and OTP are required." });
+    }
+
+    const otpRegex = /^\d{6}$/;
+    if (!otpRegex.test(otp)) {
+      return res.status(400).json({ message: "Invalid OTP format." });
     }
 
     const user = await userModel.findOne({ email });

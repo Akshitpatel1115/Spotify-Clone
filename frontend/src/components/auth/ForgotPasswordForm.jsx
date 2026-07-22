@@ -133,12 +133,15 @@ const ForgotPasswordForm = () => {
             name="otp"
             placeholder="Enter 6-digit code"
             value={otp}
-            onChange={(e) => setOtp(e.target.value)}
+            onChange={(e) => {
+              const val = e.target.value.replace(/\D/g, "");
+              if (val.length <= 6) setOtp(val);
+            }}
             icon={FiLock}
             required
             maxLength={6}
           />
-          <Button type="submit" disabled={isLoading}>
+          <Button type="submit" disabled={isLoading || otp.length !== 6}>
             {isLoading ? "Verifying..." : "Verify OTP"}
           </Button>
 
