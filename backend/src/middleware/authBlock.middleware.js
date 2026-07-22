@@ -49,7 +49,7 @@ async function checkAuthBlock(req, res, next) {
 
         return {
           blocked: true,
-          message: `${messageReason}. Please try again in ${timeStr}.`,
+          message: `${messageReason}. Please try again after sometime.`,
           remainingSeconds,
         };
       } else {
