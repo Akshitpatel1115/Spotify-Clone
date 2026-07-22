@@ -32,6 +32,14 @@ const userSchema = new mongoose.Schema({
   resetPasswordVerified: {
     type: Boolean,
     default: false,
+  },
+  loginAttempts: {
+    type: Number,
+    default: 0,
+  },
+  lockUntil: {
+    type: Date,
+    default: null,
   }
 });
 
