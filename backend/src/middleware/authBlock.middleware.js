@@ -50,7 +50,6 @@ async function checkAuthBlock(req, res, next) {
         return {
           blocked: true,
           message: `${messageReason}. Please try again after sometime.`,
-          remainingSeconds,
         };
       } else {
         // Block expired, clean it up!
@@ -74,7 +73,6 @@ async function checkAuthBlock(req, res, next) {
         return res.status(423).json({
           success: false,
           message: result.message,
-          remainingSeconds: result.remainingSeconds,
         });
       }
     }
@@ -85,7 +83,6 @@ async function checkAuthBlock(req, res, next) {
         return res.status(423).json({
           success: false,
           message: result.message,
-          remainingSeconds: result.remainingSeconds,
         });
       }
     }

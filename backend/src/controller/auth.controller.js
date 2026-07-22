@@ -195,8 +195,7 @@ async function login(req, res) {
         await user.save();
         return res.status(423).json({
           success: false,
-          message: `Too many failed login attempts. Please try again in ${LOCK_MINUTES} minutes.`,
-          remainingSeconds: LOCK_MINUTES * 60
+          message: `Too many failed login attempts. Please try again after sometime.`,
         });
       }
       
@@ -300,8 +299,7 @@ async function verifyEmail(req, res) {
         await pendingUser.save();
         return res.status(423).json({
           success: false,
-          message: `Authentication is temporarily blocked. Please try again in ${OTP_BLOCK_MINUTES} minutes.`,
-          remainingSeconds: OTP_BLOCK_MINUTES * 60
+          message: `Authentication is temporarily blocked. Please try again after sometime.`,
         });
       }
       
@@ -443,8 +441,7 @@ async function verifyResetOtp(req, res) {
         await user.save();
         return res.status(423).json({
           success: false,
-          message: `Authentication is temporarily blocked. Please try again in ${OTP_BLOCK_MINUTES} minutes.`,
-          remainingSeconds: OTP_BLOCK_MINUTES * 60
+          message: `Authentication is temporarily blocked. Please try again after sometime.`,
         });
       }
       
