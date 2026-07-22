@@ -36,6 +36,15 @@ const RegisterForm = () => {
     }));
   };
 
+  // Restore OTP step if the user refreshes the page
+  useEffect(() => {
+    const savedEmail = sessionStorage.getItem("pendingRegistrationEmail");
+    if (savedEmail) {
+      setFormData((prev) => ({ ...prev, email: savedEmail }));
+      setIsOtpStep(true);
+    }
+  }, []);
+
   useEffect(() => {
     let interval;
     if (isOtpStep && timer > 0) {
@@ -82,6 +91,9 @@ const RegisterForm = () => {
       const response = await api.post("/auth/register", formData);
       console.log("Backend response received:", response.data);
       toast.success("OTP sent to your email successfully!");
+      
+      // Save to sessionStorage so it persists on refresh
+      sessionStorage.setItem("pendingRegistrationEmail", formData.email);
       setIsOtpStep(true);
     } catch (error) {
       console.error("Error from backend:", error);
@@ -90,6 +102,7 @@ const RegisterForm = () => {
       
       // If the backend says the registration is already pending, let them enter the OTP anyway!
       if (error.response?.status === 409 && errorMessage.includes("pending")) {
+        sessionStorage.setItem("pendingRegistrationEmail", formData.email);
         setIsOtpStep(true);
       }
     } finally {
@@ -109,6 +122,9 @@ const RegisterForm = () => {
     try {
       await api.post("/auth/verify-email", { email: formData.email, otp });
       toast.success("Email verified successfully! You can now login.");
+      
+      // Clean up storage on success
+      sessionStorage.removeItem("pendingRegistrationEmail");
       navigate("/login");
     } catch (error) {
       console.error("OTP Verification failed:", error);
@@ -158,7 +174,7 @@ const RegisterForm = () => {
           </Button>
         </form>
 
-        <div className="mt-4 text-center">
+        <div className="mt-4 flex flex-col items-center gap-2">
           <button
             type="button"
             disabled={timer > 0 || isLoading}
@@ -166,6 +182,17 @@ const RegisterForm = () => {
             className="text-sm font-semibold text-primary transition hover:text-primary-hover disabled:text-gray-500 disabled:cursor-not-allowed"
           >
             {timer > 0 ? `Resend OTP in ${formatTime(timer)}` : "Resend OTP"}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              sessionStorage.removeItem("pendingRegistrationEmail");
+              setIsOtpStep(false);
+            }}
+            className="text-xs text-gray-400 transition hover:text-white"
+          >
+            Entered the wrong email? Start over
           </button>
         </div>
       </div>
