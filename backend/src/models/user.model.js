@@ -37,9 +37,10 @@ const userSchema = new mongoose.Schema({
     type: Number,
     default: 0,
   },
-  lockUntil: {
-    type: Date,
-    default: null,
+  authBlock: {
+    isBlocked: { type: Boolean, default: false },
+    reason: { type: String, enum: ["OTP_VERIFICATION", "LOGIN_SECURITY"] },
+    blockedUntil: { type: Date }
   },
   resetPasswordOtpAttempts: {
     type: Number,

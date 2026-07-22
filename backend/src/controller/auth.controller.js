@@ -174,13 +174,7 @@ async function login(req, res) {
       });
     }
 
-    // Step 2: Check account lock
-    if (user.lockUntil && user.lockUntil > new Date()) {
-      return res.status(423).json({
-        success: false,
-        message: "Too many failed login attempts. Please try again later.",
-      });
-    }
+    // Step 2 is now handled by authBlock middleware
 
     // Step 3: Compare password
     const isPasswordValid = await bcrypt.compare(password, user.password);
@@ -193,7 +187,17 @@ async function login(req, res) {
       const LOCK_MINUTES = parseInt(process.env.LOGIN_LOCK_MINUTES) || 15;
 
       if (user.loginAttempts >= MAX_ATTEMPTS) {
-        user.lockUntil = new Date(Date.now() + LOCK_MINUTES * 60 * 1000);
+        user.authBlock = {
+          isBlocked: true,
+          reason: "LOGIN_SECURITY",
+          blockedUntil: new Date(Date.now() + LOCK_MINUTES * 60 * 1000)
+        };
+        await user.save();
+        return res.status(423).json({
+          success: false,
+          message: `Too many failed login attempts. Please try again in ${LOCK_MINUTES} minutes.`,
+          remainingSeconds: LOCK_MINUTES * 60
+        });
       }
       
       await user.save();
@@ -204,9 +208,8 @@ async function login(req, res) {
     }
 
     // Step 5: If password is correct, reset attempts
-    if (user.loginAttempts > 0 || user.lockUntil) {
+    if (user.loginAttempts > 0) {
       user.loginAttempts = 0;
-      user.lockUntil = undefined;
       await user.save();
     }
 
@@ -278,27 +281,27 @@ async function verifyEmail(req, res) {
       });
     }
 
-    // Step 5: Check Attempt Limit Before Compare
-    const MAX_ATTEMPTS = parseInt(process.env.OTP_MAX_ATTEMPTS) || 5;
-    if (pendingUser.otpAttempts >= MAX_ATTEMPTS) {
-      return res.status(400).json({
-        message: "Maximum verification attempts reached. Please request a new verification code.",
-      });
-    }
-
-    // Step 6: Compare OTP using bcrypt
+    // Step 5: Compare OTP using bcrypt
     const isOtpValid = await bcrypt.compare(otp, pendingUser.otp);
 
-    // Step 7: If OTP is incorrect
+    // Step 6: If OTP is incorrect
     if (!isOtpValid) {
       pendingUser.otpAttempts += 1;
       
+      const MAX_ATTEMPTS = parseInt(process.env.OTP_MAX_ATTEMPTS) || 5;
+      const OTP_BLOCK_MINUTES = parseInt(process.env.OTP_BLOCK_MINUTES) || 5;
+
       if (pendingUser.otpAttempts >= MAX_ATTEMPTS) {
-        // Invalidate OTP by expiring it immediately
-        pendingUser.otpExpiresAt = new Date(Date.now() - 1000);
+        pendingUser.authBlock = {
+          isBlocked: true,
+          reason: "OTP_VERIFICATION",
+          blockedUntil: new Date(Date.now() + OTP_BLOCK_MINUTES * 60 * 1000)
+        };
         await pendingUser.save();
-        return res.status(400).json({
-          message: "Maximum verification attempts reached. Please request a new verification code.",
+        return res.status(423).json({
+          success: false,
+          message: `Authentication is temporarily blocked. Please try again in ${OTP_BLOCK_MINUTES} minutes.`,
+          remainingSeconds: OTP_BLOCK_MINUTES * 60
         });
       }
       
@@ -423,24 +426,25 @@ async function verifyResetOtp(req, res) {
       });
     }
 
-    const MAX_ATTEMPTS = parseInt(process.env.OTP_MAX_ATTEMPTS) || 5;
-    if (user.resetPasswordOtpAttempts >= MAX_ATTEMPTS) {
-      return res.status(400).json({
-        message: "Maximum verification attempts reached. Please request a new verification code.",
-      });
-    }
-
     const isOtpValid = await bcrypt.compare(otp, user.resetPasswordOTP);
 
     if (!isOtpValid) {
       user.resetPasswordOtpAttempts += 1;
       
+      const MAX_ATTEMPTS = parseInt(process.env.OTP_MAX_ATTEMPTS) || 5;
+      const OTP_BLOCK_MINUTES = parseInt(process.env.OTP_BLOCK_MINUTES) || 5;
+
       if (user.resetPasswordOtpAttempts >= MAX_ATTEMPTS) {
-        // Invalidate OTP by expiring it immediately
-        user.resetPasswordOTPExpiresAt = new Date(Date.now() - 1000);
+        user.authBlock = {
+          isBlocked: true,
+          reason: "OTP_VERIFICATION",
+          blockedUntil: new Date(Date.now() + OTP_BLOCK_MINUTES * 60 * 1000)
+        };
         await user.save();
-        return res.status(400).json({
-          message: "Maximum verification attempts reached. Please request a new verification code.",
+        return res.status(423).json({
+          success: false,
+          message: `Authentication is temporarily blocked. Please try again in ${OTP_BLOCK_MINUTES} minutes.`,
+          remainingSeconds: OTP_BLOCK_MINUTES * 60
         });
       }
       

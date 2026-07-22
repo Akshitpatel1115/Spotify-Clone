@@ -26,6 +26,11 @@ const pendingUserSchema = new mongoose.Schema({
     type: Number,
     default: 0,
   },
+  authBlock: {
+    isBlocked: { type: Boolean, default: false },
+    reason: { type: String, enum: ["OTP_VERIFICATION", "LOGIN_SECURITY"] },
+    blockedUntil: { type: Date }
+  },
   otpExpiresAt: {
     type: Date,
     required: true,
