@@ -98,6 +98,68 @@ async function register(req, res) {
   }
 }
 
+async function resendOtp(req, res) {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ message: "Email is required." });
+    }
+
+    const pendingUser = await PendingUser.findOne({ email });
+
+    if (!pendingUser) {
+      return res.status(404).json({
+        message: "No pending registration found for this email.",
+      });
+    }
+
+    if (pendingUser.expiresAt < new Date()) {
+      await PendingUser.deleteOne({ _id: pendingUser._id });
+      return res.status(400).json({
+        message: "Registration window has expired. Please register again.",
+      });
+    }
+
+    if (pendingUser.resendAvailableAt > new Date()) {
+      return res.status(429).json({
+        success: false,
+        message: "Please wait before requesting another OTP.",
+      });
+    }
+
+    const otp = crypto.randomInt(100000, 999999).toString();
+    const hashedOtp = await bcrypt.hash(otp, 10);
+
+    const now = Date.now();
+    pendingUser.otp = hashedOtp;
+    pendingUser.otpExpiresAt = new Date(now + 10 * 60 * 1000);
+    pendingUser.resendAvailableAt = new Date(now + 2 * 60 * 1000);
+    pendingUser.expiresAt = new Date(now + 30 * 60 * 1000);
+
+    await pendingUser.save();
+
+    console.log("[Resend OTP] Handing off to Resend Email Service...");
+    try {
+      await sendOTPEmail(email, otp);
+      console.log("[Resend OTP] Email sent successfully!");
+    } catch (emailError) {
+      console.error("\n=========================================");
+      console.error("⚠️  EMAIL DELIVERY FAILED  ⚠️");
+      console.error("For testing purposes, your OTP is: ", otp);
+      console.error("=========================================\n");
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "A new verification code has been sent.",
+    });
+  } catch (error) {
+    console.error("[Resend OTP] Error:", error);
+    return res.status(500).json({ message: "Internal server error while resending OTP." });
+  }
+}
+
 async function login(req, res) {
   const { username, email, password } = req.body;
 
@@ -216,4 +278,4 @@ async function verifyEmail(req, res) {
   }
 }
 
-module.exports = { register, verifyEmail, login, logout };
+module.exports = { register, resendOtp, verifyEmail, login, logout };
