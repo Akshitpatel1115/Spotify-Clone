@@ -10,6 +10,7 @@ import Loader from "./components/common/Loader";
 const Home = lazy(() => import("./pages/Home"));
 const Login = lazy(() => import("./pages/Login"));
 const Register = lazy(() => import("./pages/Register"));
+const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
 const Albums = lazy(() => import("./pages/Albums"));
 const AlbumDetails = lazy(() => import("./pages/AlbumDetails"));
 const CreateAlbum = lazy(() => import("./pages/CreateAlbum"));
@@ -24,6 +25,7 @@ const App = () => {
         <Route element={<PublicRoute />}>
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
         </Route>
 
         <Route element={<Layout />}>
@@ -39,10 +41,10 @@ const App = () => {
             <Route path="/create-album" element={<CreateAlbum />} />
             <Route path="/createMusic" element={<CreateMusic />} />
           </Route>
-
-          {/* Catch-all 404 Route */}
-          <Route path="*" element={<NotFound />} />
         </Route>
+
+        {/* Catch-all 404 Route (Outside of Layout so no sidebar/navbar) */}
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </Suspense>
   );
