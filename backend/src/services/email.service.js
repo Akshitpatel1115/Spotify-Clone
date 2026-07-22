@@ -23,7 +23,7 @@ const sendOTPEmail = async (to, otp) => {
 
   const htmlContent = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px;">
-      <h2 style="color: #1ed760; text-align: center;">Welcome to Spotify Clone!</h2>
+      <h2 style="color: #1ed760; text-align: center;">Welcome to SONEXA!</h2>
       <p style="font-size: 16px; color: #333;">You are just one step away from joining. Please use the verification code below to complete your registration:</p>
       <div style="text-align: center; margin: 30px 0;">
         <span style="display: inline-block; padding: 15px 30px; font-size: 32px; font-weight: bold; letter-spacing: 5px; color: #fff; background-color: #121212; border-radius: 8px;">
@@ -37,7 +37,7 @@ const sendOTPEmail = async (to, otp) => {
 
   try {
     const { data, error } = await resend.emails.send({
-      from: `Spotify Clone <${process.env.EMAIL_FROM}>`,
+      from: `SONEXA <${process.env.EMAIL_FROM}>`,
       to: to,
       subject: 'Your Registration Verification Code',
       html: htmlContent,
@@ -67,7 +67,7 @@ const sendPasswordResetEmail = async (to, otp) => {
   const htmlContent = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px;">
       <h2 style="color: #1ed760; text-align: center;">Reset Your Password</h2>
-      <p style="font-size: 16px; color: #333;">We received a request to reset the password for your Spotify Clone account. Please use the verification code below to reset it:</p>
+      <p style="font-size: 16px; color: #333;">We received a request to reset the password for your SONEXA account. Please use the verification code below to reset it:</p>
       <div style="text-align: center; margin: 30px 0;">
         <span style="display: inline-block; padding: 15px 30px; font-size: 32px; font-weight: bold; letter-spacing: 5px; color: #fff; background-color: #121212; border-radius: 8px;">
           ${otp}
@@ -80,7 +80,7 @@ const sendPasswordResetEmail = async (to, otp) => {
 
   try {
     const { data, error } = await resend.emails.send({
-      from: `Spotify Clone <${process.env.EMAIL_FROM}>`,
+      from: `SONEXA <${process.env.EMAIL_FROM}>`,
       to: to,
       subject: 'Password Reset Verification Code',
       html: htmlContent,

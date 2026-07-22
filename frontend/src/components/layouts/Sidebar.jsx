@@ -1,4 +1,5 @@
 import { NavLink } from "react-router-dom";
+import logoImg from "../../assets/logo.jpeg";
 import {
   FiHome,
   FiDisc,
@@ -28,11 +29,11 @@ const Sidebar = () => {
     <aside className="hidden md:flex flex-col h-full bg-surface border-r border-border transition-all duration-300 md:w-20 lg:w-64 p-4">
       {/* Logo */}
       <div className="flex items-center gap-3 mb-8 lg:px-2">
-        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary text-2xl font-bold text-black">
-          ♫
+        <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full border border-border">
+          <img src={logoImg} alt="SONEXA Logo" className="h-full w-full object-cover" />
         </div>
         <span className="hidden lg:block text-2xl font-bold text-white tracking-wide">
-          Spotify
+          SONEXA
         </span>
       </div>
 

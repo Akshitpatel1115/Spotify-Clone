@@ -4,6 +4,7 @@ import useAuth from "../../context/useAuth";
 import api from "../../api/axios";
 import { FiLogOut } from "react-icons/fi";
 import ConfirmDialog from "../common/ConfirmDialog";
+import logoImg from "../../assets/logo.jpeg";
 
 const Navbar = () => {
   const { signOut, user } = useAuth();
@@ -28,10 +29,10 @@ const Navbar = () => {
     <header className="sticky top-0 z-50 flex h-16 w-full items-center justify-between bg-[#121212]/90 px-4 backdrop-blur-md lg:px-8 border-b border-border/30">
       {/* Mobile Logo (Hidden on md/lg since Sidebar has it) */}
       <div className="flex items-center gap-3 md:hidden">
-        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-xl font-bold text-black">
-          ♫
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full border border-border">
+          <img src={logoImg} alt="SONEXA Logo" className="h-full w-full object-cover" />
         </div>
-        <span className="font-bold text-white tracking-wide text-lg">Spotify</span>
+        <span className="font-bold text-white tracking-wide text-lg">SONEXA</span>
       </div>
 
       {/* Right side items */}

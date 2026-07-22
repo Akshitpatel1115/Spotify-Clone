@@ -113,7 +113,7 @@ const FooterPlayer = () => {
       {/* Left: Song Info */}
       <div className="flex items-center gap-4 w-1/3">
         <div className="h-14 w-14 rounded-xl overflow-hidden bg-surface-hover shrink-0 hidden sm:block">
-          {/* Dummy image - standard Spotify clone practice */}
+          {/* Dummy image - standard SONEXA practice */}
           <img 
             src="https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?q=80&w=200&auto=format&fit=crop" 
             alt="Album cover" 
