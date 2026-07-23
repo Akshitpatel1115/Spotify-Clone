@@ -154,7 +154,6 @@ async function resendOtp(req, res) {
     try {
       await sendOTPEmail(email, otp);
     } catch (emailError) {
-      console.log(emailError)
       console.error("⚠️  EMAIL DELIVERY FAILED  ⚠️");
     }
 

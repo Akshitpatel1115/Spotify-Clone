@@ -1,7 +1,5 @@
-const cookieParser = require("cookie-parser");
 const musicModel = require("../models/music.model");
 const albumModel = require("../models/album.model");
-const jwt = require("jsonwebtoken");
 const { uploadFile } = require("../services/storage.service");
 
 async function createMusic(req, res) {

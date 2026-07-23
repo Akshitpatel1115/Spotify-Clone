@@ -79,11 +79,9 @@ const RegisterForm = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Register button clicked. Validating form data...");
 
     const usernameRegex = /^[a-zA-Z][a-zA-Z0-9]{5,}$/;
     if (!usernameRegex.test(formData.username)) {
-      console.log("Validation failed: Username invalid.");
       toast.error("Username must be at least 6 characters, start with a letter, and contain no spaces or special characters.");
       return;
     }
@@ -104,19 +102,16 @@ const RegisterForm = () => {
       return;
     }
 
-    console.log("Validation passed. Sending request to backend...");
     setIsLoading(true);
 
     try {
       const response = await api.post("/auth/register", formData);
-      console.log("Backend response received:", response.data);
       toast.success("OTP sent to your email successfully!");
       
       // Save to sessionStorage so it persists on refresh
       sessionStorage.setItem("pendingRegistrationEmail", formData.email);
       setIsOtpStep(true);
     } catch (error) {
-      console.error("Error from backend:", error);
       const errorMessage = error.response?.data?.message || "Registration failed";
       toast.error(errorMessage);
       
@@ -126,7 +121,6 @@ const RegisterForm = () => {
         setIsOtpStep(true);
       }
     } finally {
-      console.log("Registration request finished.");
       setIsLoading(false);
     }
   };
